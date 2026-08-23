@@ -99,9 +99,16 @@ def fetch_nhl_draft_data_for_years(years):
             if response.status_code == 200:
                 data = response.json()
                 for pick in data.get('picks', []):
-                    first = pick.get('firstName', '')
-                    last = pick.get('lastName', '')
-                    full_name = f"{first} {last}".strip()
+                    # Parse names correctly.
+                    # The NHL API returns firstName and lastName as nested dictionaries: {"default": "Firstname"}
+                    first_raw = pick.get('firstName', '')
+                    last_raw = pick.get('lastName', '')
+                    
+                    first_name = first_raw.get('default', '').strip() if isinstance(first_raw, dict) else str(first_raw).strip()
+                    last_name = last_raw.get('default', '').strip() if isinstance(last_raw, dict) else str(last_raw).strip()
+                    
+                    full_name = f"{first_name} {last_name}".strip()
+                    
                     nhl_team = pick.get('teamCommonName', {}).get('default', 'Unknown')
                     pos = pick.get('position', 'F')
                     round_num = pick.get('roundNumber', 1)
