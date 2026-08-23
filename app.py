@@ -88,9 +88,9 @@ def get_preseeded_prospects():
 def fetch_nhl_draft_data_for_years(years):
     combined_picks = []
     
-    # Preseeded base map to check overlays
+    # Preseeded base map to check overlays - convert rows to dict to prevent nested Series mismatch
     df_preseeded = get_preseeded_prospects()
-    preseeded_map = {row['Name']: row for _, row in df_preseeded.iterrows()}
+    preseeded_map = {row['Name']: row.to_dict() for _, row in df_preseeded.iterrows()}
     
     for year in years:
         try:
