@@ -171,7 +171,7 @@ search_query = st.sidebar.text_input("🔍 Search Player Name")
 if st.sidebar.button("🗑️ Reset Drafted Players"):
     st.session_state.drafted_players = set()
     st.session_state.draft_log = []
-    st.experimental_rerun()
+    st.rerun()
 
 # Apply Filters
 df_filtered = df_base[df_base['Year'].isin(selected_years)]
@@ -217,7 +217,7 @@ with tab_draft:
                                 "Pos": row['Pos'],
                                 "Year": row['Year']
                             })
-                            st.experimental_rerun()
+                            st.rerun()
                     
                     # Player Info
                     with cols[1]:
