@@ -1,0 +1,11 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Local Excel sheets (keeps your personal "Pool Stuff" file private)
+*.xlsx
+*.csv
+
+# Virtual environments
+venv/
+.venv/
