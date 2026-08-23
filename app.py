@@ -5,6 +5,8 @@ import plotly.express as px
 import requests
 import json
 import unicodedata
+import os
+import re
 
 # Set Page Config for a professional look
 st.set_page_config(
@@ -174,9 +176,118 @@ def fetch_nhl_draft_data_for_years(years):
         # Complete fallback to preseeded list if offline completely
         return df_preseeded
 
+# --- 4. PARSE FANTAX ROSTERS TO DISCOVER OWNED PLAYERS ---
+@st.cache_data
+def get_owned_players_database(uploaded_files=None):
+    owned_players = {}
+    
+    # Track which files we've processed to avoid duplicate counts
+    processed_filenames = set()
+    
+    # 1. Automatically scan local/repo directories for Fantrax rosters
+    search_paths = ["./", "./rosters/", "/workspace/knowledge/"]
+    matched_files = []
+    for path in search_paths:
+        if os.path.exists(path):
+            try:
+                for f in os.listdir(path):
+                    if f.endswith('.csv') and ('Fantrax' in f or 'Roster' in f):
+                        matched_files.append(os.path.join(path, f))
+            except Exception:
+                pass
+                
+    for filepath in matched_files:
+        filename = os.path.basename(filepath)
+        if filename in processed_filenames:
+            continue
+        processed_filenames.add(filename)
+        
+        # Extract Team ID
+        match = re.search(r"\((\d+)\)", filename)
+        if match:
+            team_name = f"Team {match.group(1)}"
+        else:
+            match_underscore = re.search(r"_(\d+)\.csv$", filename)
+            if match_underscore:
+                team_name = f"Team {match_underscore.group(1)}"
+            else:
+                team_name = filename.replace("Fantrax-Team-Roster-", "").replace(".csv", "").replace("_", " ").strip()
+                
+        try:
+            df = pd.read_csv(filepath)
+            # Fantrax exports sometimes place standard column names starting from skiprows=1
+            if "Player" not in df.columns and len(df) > 0:
+                df_alt = pd.read_csv(filepath, skiprows=1)
+                if "Player" in df_alt.columns:
+                    df = df_alt
+                    
+            if "Player" in df.columns:
+                for _, row in df.iterrows():
+                    player = row["Player"]
+                    if pd.notna(player):
+                        status = row.get("Status", "Owned")
+                        pos = row.get("Pos", "F")
+                        norm_p = normalize_name(str(player))
+                        owned_players[norm_p] = {
+                            "Team": team_name,
+                            "Status": status,
+                            "Pos": pos,
+                            "Raw_Name": str(player)
+                        }
+        except Exception:
+            pass
+            
+    # 2. Overlay manually uploaded files from live sidebar
+    if uploaded_files:
+        for uploaded_file in uploaded_files:
+            filename = uploaded_file.name
+            if filename in processed_filenames:
+                continue
+            processed_filenames.add(filename)
+            
+            match = re.search(r"\((\d+)\)", filename)
+            if match:
+                team_name = f"Team {match.group(1)}"
+            else:
+                match_underscore = re.search(r"_(\d+)\.csv$", filename)
+                if match_underscore:
+                    team_name = f"Team {match_underscore.group(1)}"
+                else:
+                    team_name = filename.replace("Fantrax-Team-Roster-", "").replace(".csv", "").replace("_", " ").strip()
+                    
+            try:
+                uploaded_file.seek(0)
+                df = pd.read_csv(uploaded_file)
+                if "Player" not in df.columns and len(df) > 0:
+                    uploaded_file.seek(0)
+                    df_alt = pd.read_csv(uploaded_file, skiprows=1)
+                    if "Player" in df_alt.columns:
+                        df = df_alt
+                        
+                if "Player" in df.columns:
+                    for _, row in df.iterrows():
+                        player = row["Player"]
+                        if pd.notna(player):
+                            status = row.get("Status", "Owned")
+                            pos = row.get("Pos", "F")
+                            norm_p = normalize_name(str(player))
+                            owned_players[norm_p] = {
+                                "Team": team_name,
+                                "Status": status,
+                                "Pos": pos,
+                                "Raw_Name": str(player)
+                            }
+            except Exception:
+                pass
+                
+    return owned_players
+
+
+# --- 5. INTERFACE LAYOUT & CONTROLS ---
+
 # Title and Logo banner
 st.markdown("<div class='main-header'>🏒 2026-27 Fantasy Hockey Draft Companion</div>", unsafe_allow_html=True)
-st.write("Dynamic live tracker and analysis built directly upon official NHL Entry Draft APIs (2023 - 2026).")
+st.write("Dynamic live tracker and analysis built directly upon official NHL Entry Draft APIs (2023 - 2026) and Fantrax rosters.")
 
 # Sidebar Controls
 st.sidebar.header("⚙️ Draft Settings & Filters")
@@ -187,6 +298,28 @@ selected_years = st.sidebar.multiselect("Draft Classes to Sync", [2023, 2024, 20
 # Trigger loading data from APIs
 with st.spinner("Fetching live data from NHL APIs..."):
     df_base = fetch_nhl_draft_data_for_years(selected_years)
+
+# Sidebar: League Rosters Settings
+st.sidebar.markdown("---")
+st.sidebar.subheader("📋 League Rosters Settings")
+hide_owned = st.sidebar.checkbox("Hide Already Owned Players", value=True)
+uploaded_rosters = st.sidebar.file_uploader("Upload More Rosters (CSVs)", type=["csv"], accept_multiple_files=True)
+
+# Parse Rosters
+owned_db = get_owned_players_database(uploaded_rosters)
+if owned_db:
+    st.sidebar.success(f"Loaded {len(owned_db)} owned players from Fantrax rosters.")
+
+# Merge Ownership into the Main Database
+df_base['Owned_By'] = None
+df_base['Owned_Status'] = None
+for idx, row in df_base.iterrows():
+    norm_n = normalize_name(row['Name'])
+    if norm_n in owned_db:
+        df_base.at[idx, 'Owned_By'] = owned_db[norm_n]['Team']
+        df_base.at[idx, 'Owned_Status'] = owned_db[norm_n]['Status']
+
+st.sidebar.markdown("---")
 
 # Sidebar Filters
 filter_pos = st.sidebar.multiselect("Positions", ["F", "D"], default=["F", "D"])
@@ -207,6 +340,10 @@ df_filtered = df_filtered[df_filtered['Pos'].isin(filter_pos)]
 df_filtered = df_filtered[df_filtered['Tier'].isin(filter_tier)]
 if search_query:
     df_filtered = df_filtered[df_filtered['Name'].str.contains(search_query, case=False)]
+
+# Filter out owned if requested
+if hide_owned:
+    df_filtered = df_filtered[df_filtered['Owned_By'].isna()]
 
 # Create Tabs
 tab_draft, tab_analytics, tab_teams, tab_api = st.tabs([
@@ -231,12 +368,15 @@ with tab_draft:
         else:
             # Render custom interactive data table with action buttons
             for index, row in available_players.iterrows():
+                is_owned = pd.notna(row['Owned_By'])
+                
                 with st.container():
                     cols = st.columns([1, 4, 2, 2, 2, 2])
                     
                     # Draft Button
                     with cols[0]:
-                        if st.button("Draft", key=f"draft_{row['Name']}_{row['Year']}"):
+                        button_label = "Owned" if is_owned else "Draft"
+                        if st.button(button_label, key=f"draft_{row['Name']}_{row['Year']}", disabled=is_owned):
                             st.session_state.drafted_players.add(row['Name'])
                             st.session_state.draft_log.append({
                                 "Name": row['Name'],
@@ -249,7 +389,10 @@ with tab_draft:
                     
                     # Player Info
                     with cols[1]:
-                        st.markdown(f"**{row['Name']}** ({row['Pos']})")
+                        if is_owned:
+                            st.markdown(f"**{row['Name']}** ({row['Pos']}) <span style='background-color:#FEE2E2; color:#DC2626; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600; margin-left:8px;'>❌ Owned by {row['Owned_By']} ({row['Owned_Status']})</span>", unsafe_allow_html=True)
+                        else:
+                            st.markdown(f"**{row['Name']}** ({row['Pos']})")
                         st.caption(f"{row['Year']} Draft · Pick #{row['Pick']} by {row['NHL_Team']} · {row['League']}")
                     
                     # Projected Points
@@ -349,7 +492,7 @@ with tab_analytics:
             <h4>⭐ Jonas Woo (D, Columbus) - The Ultimate Sleeper</h4>
             <p><b>Draft Position:</b> Round 6, Pick #185 (2026)</p>
             <p><b>2025-26 Season:</b> 29 Goals, 57 Assists, 86 Points in 56 games for Medicine Hat (WHL).</p>
-            <p><b>Fantasy Profile:</b> Woo shattered the franchise record for points by a defenseman. Despite his 6th-round real-world draft slot due to his 5'10" frame, his PNHLe is massive and he projects as a stellar late-round steal for power-play goals.</p>
+            <p><b>Fantasy Profile:</b> Woo shattered the franchise record for points by a defenseman. Despite his 6th-round real-world draft slot due to his 5'10\" frame, his PNHLe is massive and he projects as a stellar late-round steal for power-play goals.</p>
         </div>
         """, unsafe_allow_html=True)
         
