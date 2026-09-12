@@ -74,7 +74,7 @@ def get_preseeded_prospects():
     return pd.DataFrame([   {   'Goals_Last_Yr': 15,
         'League': 'NCAA',
         'NHL_Drafted': True,
-        'NHL_Team': 'Toronto Maple Leafs',
+        'NHL_Team': '2026 Draft Eligible',
         'Name': 'Gavin McKenna',
         'Notes': 'Franchise winger. Projects for immediate 1PP role. Universal '
                  'consensus #1 pick.',
@@ -91,7 +91,7 @@ def get_preseeded_prospects():
     {   'Goals_Last_Yr': 25,
         'League': 'SHL',
         'NHL_Drafted': True,
-        'NHL_Team': 'Winnipeg Jets',
+        'NHL_Team': '2026 Draft Eligible',
         'Name': 'Viggo Björck',
         'Notes': 'Tier 1 Franchise talent. Undersized but fearless. Highly '
                  'deceptive shot, excellent on power play.',
@@ -108,7 +108,7 @@ def get_preseeded_prospects():
     {   'Goals_Last_Yr': 11,
         'League': 'SHL',
         'NHL_Drafted': True,
-        'NHL_Team': 'San Jose Sharks',
+        'NHL_Team': '2026 Draft Eligible',
         'Name': 'Ivar Stenberg',
         'Notes': 'Outstanding Swedish playmaker; elite vision and power-play '
                  'utility.',
@@ -554,7 +554,7 @@ def get_preseeded_prospects():
     {   'Goals_Last_Yr': 10,
         'League': 'NCAA',
         'NHL_Drafted': True,
-        'NHL_Team': 'San Jose Sharks',
+        'NHL_Team': '2026 Draft Eligible',
         'Name': 'Keaton Verhoeff',
         'Notes': 'Calm demeanor, takes up a ton of space at 6-foot-4. '
                  'Committed to UND, raw but sky-high ceiling.',
@@ -692,7 +692,7 @@ def get_preseeded_prospects():
     {   'Goals_Last_Yr': 6,
         'League': 'Sweden Jr',
         'NHL_Drafted': True,
-        'NHL_Team': 'San Jose Sharks',
+        'NHL_Team': '2026 Draft Eligible',
         'Name': 'Leo Sahlin Wallenius',
         'Notes': 'Unowned Sharks 2nd-rounder. Sleek, beautiful skater with '
                  'high-end offensive transition potential.',
@@ -811,7 +811,7 @@ def get_preseeded_prospects():
     {   'Goals_Last_Yr': 28,
         'League': 'OHL',
         'NHL_Drafted': True,
-        'NHL_Team': 'San Jose Sharks',
+        'NHL_Team': '2026 Draft Eligible',
         'Name': 'Michael Misa',
         'Notes': 'Exceptional status player with elite speed, processing, and '
                  'finishing.',
@@ -828,7 +828,7 @@ def get_preseeded_prospects():
     {   'Goals_Last_Yr': 32,
         'League': 'NHL',
         'NHL_Drafted': True,
-        'NHL_Team': 'San Jose Sharks',
+        'NHL_Team': '2026 Draft Eligible',
         'Name': 'Macklin Celebrini',
         'Notes': 'Franchise 1C. Shoots with high-end volume and dominates all '
                  'point situations.',
@@ -1414,7 +1414,10 @@ with tab_favs:
                         st.markdown(f"⭐ **{row['Name']}** ({row['Pos']})")
                         
                     if row.get('NHL_Drafted', True):
-                        st.caption(f"{row['Year']} Draft · Pick #{row['Pick']} by {row['NHL_Team']} · {row['League']}")
+                        if 'Draft Eligible' in str(row.get('NHL_Team', '')) or 'Draft Eligible' in str(row.get('Notes', '')):
+                            st.caption(f"{row['Year']} Draft Eligible · Projected #{row['Pick']} Overall · {row['League']}")
+                        else:
+                            st.caption(f"{row['Year']} Draft · Pick #{row['Pick']} by {row['NHL_Team']} · {row['League']}")
                     else:
                         st.caption(f"Undrafted · NCAA Commitment · {row['League']}")
 
