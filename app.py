@@ -1,3 +1,4 @@
+import unicodedata
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -12,6 +13,20 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Helper function to normalize player names to match accents/umlauts flawlessly
+def normalize_name(name):
+    normalized = "".join(
+        c for c in unicodedata.normalize('NFD', str(name))
+        if unicodedata.category(c) != 'Mn'
+    ).lower().replace('-', ' ').replace('.', '').strip()
+    
+    overrides = {
+        "bradly nadeau": "bradley nadeau",
+        "dmitri simashev": "dmitriy simashev",
+    }
+    return overrides.get(normalized, normalized)
+
 
 # Custom Styling
 st.markdown("""
@@ -913,9 +928,9 @@ def get_preseeded_prospects():
 def fetch_nhl_draft_data_for_years(years):
     combined_picks = []
     
-    # Preseeded base map to check overlays
+    # Preseeded base map to check overlays (as pure Python dicts)
     df_preseeded = get_preseeded_prospects()
-    preseeded_map = {row['Name']: row for _, row in df_preseeded.iterrows()}
+    preseeded_map = {normalize_name(p['Name']): p for p in df_preseeded.to_dict('records')}
     
     for year in years:
         try:
@@ -924,8 +939,6 @@ def fetch_nhl_draft_data_for_years(years):
             if response.status_code == 200:
                 data = response.json()
                 for pick in data.get('picks', []):
-                    # Parse names correctly.
-                    # The NHL API returns firstName and lastName as nested dictionaries: {"default": "Firstname"}
                     first_raw = pick.get('firstName', '')
                     last_raw = pick.get('lastName', '')
                     
@@ -933,22 +946,21 @@ def fetch_nhl_draft_data_for_years(years):
                     last_name = last_raw.get('default', '').strip() if isinstance(last_raw, dict) else str(last_raw).strip()
                     
                     full_name = f"{first_name} {last_name}".strip()
+                    norm_name = normalize_name(full_name)
                     
                     nhl_team = pick.get('teamCommonName', {}).get('default', 'Unknown')
                     pos = pick.get('position', 'F')
                     round_num = pick.get('roundNumber', 1)
                     pick_num = pick.get('pickNumber', 1)
                     
-                    # Check if player exists in preseeded mapping to overlay rich analytics
-                    if full_name in preseeded_map:
-                        p_data = preseeded_map[full_name].copy()
-                        # Ensure actual API drafted information is accurate
+                    if norm_name in preseeded_map:
+                        p_data = preseeded_map[norm_name].copy()
                         p_data['NHL_Team'] = nhl_team
                         p_data['Round'] = round_num
                         p_data['Pick'] = pick_num
+                        p_data['NHL_Drafted'] = True
                         combined_picks.append(p_data)
                     else:
-                        # Create standard roster entry from API
                         proj_pts = 45.0 if pos == 'F' else 28.0
                         proj_ppp = 12.0 if pos == 'F' else 8.0
                         combined_picks.append({
@@ -966,18 +978,16 @@ def fetch_nhl_draft_data_for_years(years):
                             "Tier": "Prospect",
                             "Sniper_Score": 5.0,
                             "Sleeper_Score": 3.0,
-                            "Notes": "Live synced player from official NHL Draft API."
+                            "Notes": "Live synced player from official NHL Draft API.",
+                            "NHL_Drafted": True
                         })
         except Exception as e:
-            # If a specific year's API fails, we skip and use the other years' or offline fallback
             pass
             
     if combined_picks:
         return pd.DataFrame(combined_picks)
     else:
-        # Complete fallback to preseeded list if offline completely
         return df_preseeded
-
 # Title and Logo banner
 st.markdown("<div class='main-header'>🏒 2026-27 Fantasy Hockey Draft Companion</div>", unsafe_allow_html=True)
 st.write("Dynamic live tracker and analysis built directly upon official NHL Entry Draft APIs (2023 - 2026).")
