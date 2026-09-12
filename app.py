@@ -1,10 +1,14 @@
-import unicodedata
 import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
+import plotly.graph_objects as go
 import requests
 import json
+import unicodedata
+import os
+import re
+import difflib
 
 # Set Page Config for a professional look
 st.set_page_config(
@@ -60,6 +64,8 @@ if 'drafted_players' not in st.session_state:
     st.session_state.drafted_players = set()
 if 'draft_log' not in st.session_state:
     st.session_state.draft_log = []
+if 'favorite_players' not in st.session_state:
+    st.session_state.favorite_players = set()
 
 # --- 2. PRE-SEEDED FANTASY DATABASE ---
 # Curated list of elite prospects, snipers, and sleepers across 2023-2026 classes
@@ -988,6 +994,114 @@ def fetch_nhl_draft_data_for_years(years):
         return pd.DataFrame(combined_picks)
     else:
         return df_preseeded
+# --- 4. PARSE FANTAX ROSTERS TO DISCOVER OWNED PLAYERS ---
+@st.cache_data
+def get_owned_players_database(uploaded_files=None):
+    owned_players = {}
+    
+    # Track which files we've processed to avoid duplicate counts
+    processed_filenames = set()
+    
+    # 1. Automatically scan local/repo directories for Fantrax rosters
+    search_paths = ["./", "./rosters/", "/workspace/knowledge/"]
+    matched_files = []
+    for path in search_paths:
+        if os.path.exists(path):
+            try:
+                for f in os.listdir(path):
+                    if f.endswith('.csv') and ('Fantrax' in f or 'Roster' in f):
+                        matched_files.append(os.path.join(path, f))
+            except Exception:
+                pass
+                
+    for filepath in matched_files:
+        filename = os.path.basename(filepath)
+        if filename in processed_filenames:
+            continue
+        processed_filenames.add(filename)
+        
+        # Extract Team ID
+        match = re.search(r"\((\d+)\)", filename)
+        if match:
+            team_name = f"Team {match.group(1)}"
+        else:
+            match_underscore = re.search(r"_(\d+)\.csv$", filename)
+            if match_underscore:
+                team_name = f"Team {match_underscore.group(1)}"
+            else:
+                team_name = filename.replace("Fantrax-Team-Roster-", "").replace(".csv", "").replace("_", " ").strip()
+                
+        try:
+            df = pd.read_csv(filepath)
+            # Fantrax exports sometimes place standard column names starting from skiprows=1
+            if "Player" not in df.columns and len(df) > 0:
+                df_alt = pd.read_csv(filepath, skiprows=1)
+                if "Player" in df_alt.columns:
+                    df = df_alt
+                    
+            if "Player" in df.columns:
+                for _, row in df.iterrows():
+                    player = row["Player"]
+                    if pd.notna(player):
+                        status = row.get("Status", "Owned")
+                        pos = row.get("Pos", "F")
+                        norm_p = normalize_name(str(player))
+                        owned_players[norm_p] = {
+                            "Team": team_name,
+                            "Status": status,
+                            "Pos": pos,
+                            "Raw_Name": str(player)
+                        }
+        except Exception:
+            pass
+            
+    # 2. Overlay manually uploaded files from live sidebar
+    if uploaded_files:
+        for uploaded_file in uploaded_files:
+            filename = uploaded_file.name
+            if filename in processed_filenames:
+                continue
+            processed_filenames.add(filename)
+            
+            match = re.search(r"\((\d+)\)", filename)
+            if match:
+                team_name = f"Team {match.group(1)}"
+            else:
+                match_underscore = re.search(r"_(\d+)\.csv$", filename)
+                if match_underscore:
+                    team_name = f"Team {match_underscore.group(1)}"
+                else:
+                    team_name = filename.replace("Fantrax-Team-Roster-", "").replace(".csv", "").replace("_", " ").strip()
+                    
+            try:
+                uploaded_file.seek(0)
+                df = pd.read_csv(uploaded_file)
+                if "Player" not in df.columns and len(df) > 0:
+                    uploaded_file.seek(0)
+                    df_alt = pd.read_csv(uploaded_file, skiprows=1)
+                    if "Player" in df_alt.columns:
+                        df = df_alt
+                        
+                if "Player" in df.columns:
+                    for _, row in df.iterrows():
+                        player = row["Player"]
+                        if pd.notna(player):
+                            status = row.get("Status", "Owned")
+                            pos = row.get("Pos", "F")
+                            norm_p = normalize_name(str(player))
+                            owned_players[norm_p] = {
+                                "Team": team_name,
+                                "Status": status,
+                                "Pos": pos,
+                                "Raw_Name": str(player)
+                            }
+            except Exception:
+                pass
+                
+    return owned_players
+
+
+
 # Title and Logo banner
 st.markdown("<div class='main-header'>🏒 2026-27 Fantasy Hockey Draft Companion</div>", unsafe_allow_html=True)
 st.write("Dynamic live tracker and analysis built directly upon official NHL Entry Draft APIs (2023 - 2026).")
@@ -1002,6 +1116,41 @@ selected_years = st.sidebar.multiselect("Draft Classes to Sync", [2023, 2024, 20
 with st.spinner("Fetching live data from NHL APIs..."):
     df_base = fetch_nhl_draft_data_for_years(selected_years)
 
+# Sidebar: League Rosters Settings
+st.sidebar.markdown("---")
+st.sidebar.subheader("📋 League Rosters Settings")
+hide_owned = st.sidebar.checkbox("Hide Already Owned Players", value=True)
+filter_only_drafted = st.sidebar.checkbox("Only Show NHL-Drafted Prospects", value=True)
+uploaded_rosters = st.sidebar.file_uploader("Upload More Rosters (CSVs)", type=["csv"], accept_multiple_files=True)
+
+# Parse Rosters
+owned_db = get_owned_players_database(uploaded_rosters)
+if owned_db:
+    st.sidebar.success(f"Loaded {len(owned_db)} owned players from Fantrax rosters.")
+
+# Ensure NHL_Drafted column exists
+if 'NHL_Drafted' not in df_base.columns:
+    df_base['NHL_Drafted'] = True
+df_base['NHL_Drafted'] = df_base['NHL_Drafted'].fillna(True)
+
+# Merge Ownership into the Main Database
+df_base['Owned_By'] = None
+df_base['Owned_Status'] = None
+if owned_db:
+    owned_keys = list(owned_db.keys())
+    for idx, row in df_base.iterrows():
+        norm_n = normalize_name(row['Name'])
+        matched_key = None
+        if norm_n in owned_db:
+            matched_key = norm_n
+        else:
+            matches = difflib.get_close_matches(norm_n, owned_keys, n=1, cutoff=0.90)
+            if matches:
+                matched_key = matches[0]
+                
+        if matched_key:
+            df_base.at[idx, 'Owned_By'] = owned_db[matched_key]['Team']
+            df_base.at[idx, 'Owned_Status'] = owned_db[matched_key]['Status']
 
 # Sidebar Sorting
 st.sidebar.markdown("---")
@@ -1025,11 +1174,17 @@ filter_tier = st.sidebar.multiselect("Prospect Types", ["Elite", "Sniper", "Slee
 # Search Bar
 search_query = st.sidebar.text_input("🔍 Search Player Name")
 
-# Reset Board Button
-if st.sidebar.button("🗑️ Reset Drafted Players"):
-    st.session_state.drafted_players = set()
-    st.session_state.draft_log = []
-    st.rerun()
+# Sidebar Action Buttons
+col_sb1, col_sb2 = st.sidebar.columns(2)
+with col_sb1:
+    if st.button("🗑️ Reset Drafts"):
+        st.session_state.drafted_players = set()
+        st.session_state.draft_log = []
+        st.rerun()
+with col_sb2:
+    if st.button("⭐ Clear Watchlist"):
+        st.session_state.favorite_players = set()
+        st.rerun()
 
 # Apply Filters
 df_filtered = df_base[df_base['Year'].isin(selected_years)]
@@ -1038,10 +1193,16 @@ df_filtered = df_filtered[df_filtered['Tier'].isin(filter_tier)]
 if search_query:
     df_filtered = df_filtered[df_filtered['Name'].str.contains(search_query, case=False)]
 
+if hide_owned:
+    df_filtered = df_filtered[df_filtered['Owned_By'].isna()]
+
+if filter_only_drafted:
+    df_filtered = df_filtered[df_filtered['NHL_Drafted'] == True]
+
 # Create Tabs
-tab_draft, tab_analytics, tab_teams, tab_api = st.tabs([
+tab_draft, tab_favs, tab_teams, tab_api = st.tabs([
     "🎯 Live Draft Center", 
-    "📈 Prospect Sniper & Sleeper Analytics", 
+    "⭐ Favorites Watchlist", 
     "🛡️ NHL Team Portfolios",
     "🔌 API Connection Hub"
 ])
@@ -1074,12 +1235,18 @@ with tab_draft:
         else:
             # Render custom interactive data table with action buttons
             for index, row in available_players.iterrows():
+                is_owned = pd.notna(row['Owned_By'])
+                is_fav = row['Name'] in st.session_state.favorite_players
+                
                 with st.container():
-                    cols = st.columns([1, 4, 2, 2, 2, 2])
+                    cols = st.columns([1, 1, 3, 2, 2, 2, 2])
                     
                     # Draft Button
                     with cols[0]:
-                        if st.button("Draft", key=f"draft_{row['Name']}_{row['Year']}"):
+                        button_label = "Owned" if is_owned else "Draft"
+                        is_disabled = is_owned or (not row.get('NHL_Drafted', True))
+                        button_label = "Owned" if is_owned else ("Ineligible" if not row.get('NHL_Drafted', True) else "Draft")
+                        if st.button(button_label, key=f"draft_{row['Name']}_{row['Year']}", disabled=is_disabled):
                             st.session_state.drafted_players.add(row['Name'])
                             st.session_state.draft_log.append({
                                 "Name": row['Name'],
@@ -1089,33 +1256,52 @@ with tab_draft:
                                 "Year": row['Year']
                             })
                             st.rerun()
+
+                    # Favorite / Star Button
+                    with cols[1]:
+                        fav_label = "⭐ Saved" if is_fav else "☆ Star"
+                        if st.button(fav_label, key=f"fav_{row['Name']}_{row['Year']}"):
+                            if is_fav:
+                                st.session_state.favorite_players.remove(row['Name'])
+                            else:
+                                st.session_state.favorite_players.add(row['Name'])
+                            st.rerun()
                     
                     # Player Info
-                    with cols[1]:
-                        st.markdown(f"**{row['Name']}** ({row['Pos']})")
-                        st.caption(f"{row['Year']} Draft · Pick #{row['Pick']} by {row['NHL_Team']} · {row['League']}")
-                    
-                    # Projected Points
                     with cols[2]:
+                        star_prefix = "⭐ " if is_fav else ""
+                        if is_owned:
+                            st.markdown(f"{star_prefix}**{row['Name']}** ({row['Pos']}) <span style='background-color:#FEE2E2; color:#DC2626; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600; margin-left:8px;'>❌ Owned by {row['Owned_By']} ({row['Owned_Status']})</span>", unsafe_allow_html=True)
+                        elif not row.get('NHL_Drafted', True):
+                            st.markdown(f"{star_prefix}**{row['Name']}** ({row['Pos']}) <span style='background-color:#FEF3C7; color:#D97706; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600; margin-left:8px;'>⚠️ Ineligible (Undrafted)</span>", unsafe_allow_html=True)
+                        else:
+                            st.markdown(f"{star_prefix}**{row['Name']}** ({row['Pos']})")
+                        if row.get('NHL_Drafted', True):
+                            st.caption(f"{row['Year']} Draft · Pick #{row['Pick']} by {row['NHL_Team']} · {row['League']}")
+                        else:
+                            st.caption(f"Undrafted · NCAA Commitment · {row['League']}")
+
+                    # Projected Points
+                    with cols[3]:
                         st.metric("Proj. Pts", f"{row['Projected_Pts']} pts")
                         
                     # Projected PPP
-                    with cols[3]:
+                    with cols[4]:
                         st.metric("Proj. PPP", f"{row['Projected_PPP']} pts")
                         
                     # Sniper / Sleeper Tiers
-                    with cols[4]:
+                    with cols[5]:
                         if row['Tier'] == "Sleeper":
-                            st.markdown(f"⭐ **Sleeper** (Score: {row['Sleeper_Score']}/10)")
+                            st.markdown(f"⭐ **Sleeper** ({row['Sleeper_Score']}/10)")
                         elif row['Tier'] == "Sniper":
-                            st.markdown(f"🎯 **Sniper** (Score: {row['Sniper_Score']}/10)")
+                            st.markdown(f"🎯 **Sniper** ({row['Sniper_Score']}/10)")
                         elif row['Tier'] == "PP Quarterback":
                             st.markdown(f"🏒 **PP QB**")
                         else:
                             st.markdown(f"💎 **{row['Tier']}**")
                             
                     # Scouting Notes
-                    with cols[5]:
+                    with cols[6]:
                         st.caption(row['Notes'])
                         
                     st.markdown("---")
@@ -1142,68 +1328,114 @@ with tab_draft:
             for item in reversed(st.session_state.draft_log):
                 st.markdown(f"❌ **{item['Name']}** ({item['Pos']}) — {item['Year']} Drafted by *{item['NHL_Team']}* (Proj: {item['Projected_Pts']} pts)")
 
-# ==================== TAB 2: PROSPECT ANALYTICS ====================
-with tab_analytics:
-    st.subheader("Deep Goal-Scoring & Sleeper Analytics")
+# ==================== TAB 2: FAVORITES WATCHLIST ====================
+with tab_favs:
+    st.subheader("⭐ Curated Favorites & Watchlist")
+    st.write("Your priority shortlist of must-target prospects for draft day.")
     
-    col_chart_1, col_chart_2 = st.columns(2)
+    fav_names = list(st.session_state.favorite_players)
     
-    with col_chart_1:
-        st.write("🎯 **Pure Snipers: Goals last season vs. Projected Sniper Score**")
-        snipers_only = df_base[df_base['Sniper_Score'] >= 7.0].sort_values(by="Goals_Last_Yr", ascending=False)
-        fig_snipers = px.scatter(
-            snipers_only, 
-            x="Goals_Last_Yr", 
-            y="Sniper_Score", 
-            size="Projected_Pts", 
-            color="Tier",
-            hover_name="Name",
-            text="Name",
-            title="Elite Snipers (Sized by Projected NHL Points)",
-            color_discrete_sequence=px.colors.qualitative.Dark2
-        )
-        fig_snipers.update_traces(textposition='top center')
-        st.plotly_chart(fig_snipers, use_container_width=True)
+    if not fav_names:
+        st.info("⭐ Your watchlist is currently empty! Click the '☆ Star' button next to any player in the Live Draft Center to save them here.")
+    else:
+        df_favs = df_base[df_base['Name'].isin(fav_names)].copy()
         
-    with col_chart_2:
-        st.write("⭐ **Sleepers: Draft Pick vs. Sleeper Value Rating**")
-        sleepers_only = df_base[df_base['Sleeper_Score'] >= 5.0].sort_values(by="Pick")
-        fig_sleepers = px.scatter(
-            sleepers_only, 
-            x="Pick", 
-            y="Sleeper_Score", 
-            size="Projected_Pts", 
-            color="NHL_Team",
-            hover_name="Name",
-            text="Name",
-            title="Sleeper Value Curve (High Sleepers are Late Round Steals)",
-            labels={"Pick": "Overall Draft Pick Number", "Sleeper_Score": "Sleeper Score (Out of 10)"}
+        # Summary metrics
+        f_col1, f_col2, f_col3 = st.columns(3)
+        with f_col1:
+            st.metric("Total Watchlist Targets", f"{len(df_favs)} players")
+        with f_col2:
+            avg_proj = df_favs['Projected_Pts'].mean() if not df_favs.empty else 0
+            st.metric("Avg Projected Pts", f"{avg_proj:.1f} pts")
+        with f_col3:
+            avg_ppp = df_favs['Projected_PPP'].mean() if not df_favs.empty else 0
+            st.metric("Avg Projected PPP", f"{avg_ppp:.1f} pts")
+            
+        st.markdown("---")
+        
+        # Sorting for Watchlist
+        fav_sort = st.selectbox(
+            "Sort Watchlist By:",
+            ["Projected Points", "Projected PPP", "Real Draft Pick #", "Position"],
+            index=0,
+            key="fav_sort_selectbox"
         )
-        fig_sleepers.update_traces(textposition='top center')
-        st.plotly_chart(fig_sleepers, use_container_width=True)
+        
+        if fav_sort == "Projected Points":
+            df_favs = df_favs.sort_values(by="Projected_Pts", ascending=False)
+        elif fav_sort == "Projected PPP":
+            df_favs = df_favs.sort_values(by="Projected_PPP", ascending=False)
+        elif fav_sort == "Real Draft Pick #":
+            df_favs = df_favs.sort_values(by=["Year", "Round", "Pick"], ascending=[False, True, True])
+        elif fav_sort == "Position":
+            df_favs = df_favs.sort_values(by=["Pos", "Projected_Pts"], ascending=[True, False])
+            
+        # Render Watchlist Player Cards
+        for index, row in df_favs.iterrows():
+            is_drafted = row['Name'] in st.session_state.drafted_players
+            is_owned = pd.notna(row['Owned_By'])
+            
+            with st.container():
+                f_cols = st.columns([1, 1, 3, 2, 2, 2, 2])
+                
+                # Draft Action
+                with f_cols[0]:
+                    if is_drafted:
+                        st.markdown("<span style='color:#9CA3AF; font-size:12px;'>❌ Drafted</span>", unsafe_allow_html=True)
+                    else:
+                        button_label = "Owned" if is_owned else ("Ineligible" if not row.get('NHL_Drafted', True) else "Draft")
+                        is_disabled = is_owned or (not row.get('NHL_Drafted', True))
+                        if st.button(button_label, key=f"fav_tab_draft_{row['Name']}_{row['Year']}", disabled=is_disabled):
+                            st.session_state.drafted_players.add(row['Name'])
+                            st.session_state.draft_log.append({
+                                "Name": row['Name'],
+                                "NHL_Team": row['NHL_Team'],
+                                "Projected_Pts": row['Projected_Pts'],
+                                "Pos": row['Pos'],
+                                "Year": row['Year']
+                            })
+                            st.rerun()
 
-    # Sleeper & Sniper Highlights Grid
-    st.subheader("🔥 Top Scouting Spotlights")
-    highlight_cols = st.columns(2)
-    
-    with highlight_cols[0]:
-        st.markdown("""
-        <div class='sleeper-card'>
-            <h4>⭐ Jonas Woo (D, Columbus) - The Ultimate Sleeper</h4>
-            <p><b>Draft Position:</b> Round 6, Pick #185 (2026)</p>
-            <p><b>2025-26 Season:</b> 29 Goals, 57 Assists, 86 Points in 56 games for Medicine Hat (WHL).</p>
-            <p><b>Fantasy Profile:</b> Woo shattered the franchise record for points by a defenseman. Despite his 6th-round real-world draft slot due to his 5'10" frame, his PNHLe is massive and he projects as a stellar late-round steal for power-play goals.</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-    with highlight_cols[1]:
-        st.markdown("""
-        <div class='metric-card' style='border-left: 5px solid #10B981;'>
-            <h4>🎯 Mathis Preston (F, Anaheim) - Best Pure Release</h4>
-            <p><b>Draft Position:</b> Round 2, Pick #50 (2026)</p>
-            <p><b>Scout Verdict:</b> Preston slipped in the draft due to injuries, but possesses the absolute best, most game-breaking wrist-shot release of the 2026 class. He is incredibly dangerous in open ice and represents major goal-scoring upside.</p>
-        </div>
-        """, unsafe_allow_html=True)
+                # Remove from Favorites Button
+                with f_cols[1]:
+                    if st.button("🗑️ Remove", key=f"fav_tab_remove_{row['Name']}_{row['Year']}"):
+                        st.session_state.favorite_players.remove(row['Name'])
+                        st.rerun()
+
+                # Player Info
+                with f_cols[2]:
+                    if is_drafted:
+                        st.markdown(f"~~⭐ **{row['Name']}** ({row['Pos']})~~ <span style='background-color:#E5E7EB; color:#4B5563; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600;'>Taken</span>", unsafe_allow_html=True)
+                    elif is_owned:
+                        st.markdown(f"⭐ **{row['Name']}** ({row['Pos']}) <span style='background-color:#FEE2E2; color:#DC2626; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600; margin-left:8px;'>❌ Owned by {row['Owned_By']} ({row['Owned_Status']})</span>", unsafe_allow_html=True)
+                    elif not row.get('NHL_Drafted', True):
+                        st.markdown(f"⭐ **{row['Name']}** ({row['Pos']}) <span style='background-color:#FEF3C7; color:#D97706; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600; margin-left:8px;'>⚠️ Ineligible (Undrafted)</span>", unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"⭐ **{row['Name']}** ({row['Pos']})")
+                        
+                    if row.get('NHL_Drafted', True):
+                        st.caption(f"{row['Year']} Draft · Pick #{row['Pick']} by {row['NHL_Team']} · {row['League']}")
+                    else:
+                        st.caption(f"Undrafted · NCAA Commitment · {row['League']}")
+
+                # Metrics & Info
+                with f_cols[3]:
+                    st.metric("Proj. Pts", f"{row['Projected_Pts']} pts")
+                with f_cols[4]:
+                    st.metric("Proj. PPP", f"{row['Projected_PPP']} pts")
+                with f_cols[5]:
+                    if row['Tier'] == "Sleeper":
+                        st.markdown(f"⭐ **Sleeper** ({row['Sleeper_Score']}/10)")
+                    elif row['Tier'] == "Sniper":
+                        st.markdown(f"🎯 **Sniper** ({row['Sniper_Score']}/10)")
+                    elif row['Tier'] == "PP Quarterback":
+                        st.markdown(f"🏒 **PP QB**")
+                    else:
+                        st.markdown(f"💎 **{row['Tier']}**")
+                with f_cols[6]:
+                    st.caption(row['Notes'])
+
+                st.markdown("---")
 
 # ==================== TAB 3: NHL TEAM PORTFOLIOS ====================
 with tab_teams:
