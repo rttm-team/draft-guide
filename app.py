@@ -995,8 +995,20 @@ def fetch_nhl_draft_data_for_years(years):
     else:
         return df_preseeded
 # --- 4. PARSE FANTAX ROSTERS TO DISCOVER OWNED PLAYERS ---
+def find_player_column(df):
+    possible_cols = ['Player', 'Player Name', 'Name', 'player_name', 'player', 'PLAYER', 'PLAYER NAME', 'PlayerName', 'player name']
+    for col in df.columns:
+        if str(col).strip() in possible_cols:
+            return col
+    for col in df.columns:
+        if 'player' in str(col).lower() or 'name' in str(col).lower():
+            return col
+    if len(df.columns) == 1:
+        return df.columns[0]
+    return None
+
 @st.cache_data
-def get_owned_players_database(uploaded_files=None):
+def get_owned_players_database(file_tokens=(), _uploaded_files=None):
     owned_players = {}
     
     # Track which files we've processed to avoid duplicate counts
@@ -1020,7 +1032,7 @@ def get_owned_players_database(uploaded_files=None):
             continue
         processed_filenames.add(filename)
         
-        # Extract Team ID
+        # Extract Team ID or label
         match = re.search(r"\((\d+)\)", filename)
         if match:
             team_name = f"Team {match.group(1)}"
@@ -1033,31 +1045,33 @@ def get_owned_players_database(uploaded_files=None):
                 
         try:
             df = pd.read_csv(filepath)
-            # Fantrax exports sometimes place standard column names starting from skiprows=1
-            if "Player" not in df.columns and len(df) > 0:
+            p_col = find_player_column(df)
+            if not p_col and len(df) > 0:
                 df_alt = pd.read_csv(filepath, skiprows=1)
-                if "Player" in df_alt.columns:
+                p_col_alt = find_player_column(df_alt)
+                if p_col_alt:
                     df = df_alt
+                    p_col = p_col_alt
                     
-            if "Player" in df.columns:
+            if p_col:
                 for _, row in df.iterrows():
-                    player = row["Player"]
-                    if pd.notna(player):
-                        status = row.get("Status", "Owned")
-                        pos = row.get("Pos", "F")
+                    player = row[p_col]
+                    if pd.notna(player) and str(player).strip():
+                        status = row.get("Status", "Owned") if hasattr(row, "get") and "Status" in row else "Owned"
+                        pos = row.get("Pos", "F") if hasattr(row, "get") and "Pos" in row else "F"
                         norm_p = normalize_name(str(player))
                         owned_players[norm_p] = {
                             "Team": team_name,
                             "Status": status,
                             "Pos": pos,
-                            "Raw_Name": str(player)
+                            "Raw_Name": str(player).strip()
                         }
         except Exception:
             pass
             
     # 2. Overlay manually uploaded files from live sidebar
-    if uploaded_files:
-        for uploaded_file in uploaded_files:
+    if _uploaded_files:
+        for uploaded_file in _uploaded_files:
             filename = uploaded_file.name
             if filename in processed_filenames:
                 continue
@@ -1071,35 +1085,38 @@ def get_owned_players_database(uploaded_files=None):
                 if match_underscore:
                     team_name = f"Team {match_underscore.group(1)}"
                 else:
-                    team_name = filename.replace("Fantrax-Team-Roster-", "").replace(".csv", "").replace("_", " ").strip()
+                    clean_name = filename.replace("Fantrax-Team-Roster-", "").replace(".csv", "").replace("_", " ").strip()
+                    team_name = clean_name if clean_name else "Uploaded List"
                     
             try:
                 uploaded_file.seek(0)
                 df = pd.read_csv(uploaded_file)
-                if "Player" not in df.columns and len(df) > 0:
+                p_col = find_player_column(df)
+                if not p_col and len(df) > 0:
                     uploaded_file.seek(0)
                     df_alt = pd.read_csv(uploaded_file, skiprows=1)
-                    if "Player" in df_alt.columns:
+                    p_col_alt = find_player_column(df_alt)
+                    if p_col_alt:
                         df = df_alt
+                        p_col = p_col_alt
                         
-                if "Player" in df.columns:
+                if p_col:
                     for _, row in df.iterrows():
-                        player = row["Player"]
-                        if pd.notna(player):
-                            status = row.get("Status", "Owned")
-                            pos = row.get("Pos", "F")
+                        player = row[p_col]
+                        if pd.notna(player) and str(player).strip():
+                            status = row.get("Status", "Owned") if hasattr(row, "get") and "Status" in row else "Owned"
+                            pos = row.get("Pos", "F") if hasattr(row, "get") and "Pos" in row else "F"
                             norm_p = normalize_name(str(player))
                             owned_players[norm_p] = {
                                 "Team": team_name,
                                 "Status": status,
                                 "Pos": pos,
-                                "Raw_Name": str(player)
+                                "Raw_Name": str(player).strip()
                             }
             except Exception:
                 pass
                 
     return owned_players
-
 
 
 # Title and Logo banner
@@ -1121,10 +1138,11 @@ st.sidebar.markdown("---")
 st.sidebar.subheader("📋 League Rosters Settings")
 hide_owned = st.sidebar.checkbox("Hide Already Owned Players", value=True)
 filter_only_drafted = st.sidebar.checkbox("Only Show NHL-Drafted Prospects", value=True)
-uploaded_rosters = st.sidebar.file_uploader("Upload More Rosters (CSVs)", type=["csv"], accept_multiple_files=True)
+uploaded_rosters = st.sidebar.file_uploader("Upload More Rosters or Custom Player Lists (CSVs)", type=["csv"], accept_multiple_files=True)
 
-# Parse Rosters
-owned_db = get_owned_players_database(uploaded_rosters)
+# Parse Rosters with cache-invalidation file tokens
+file_tokens = tuple((f.name, getattr(f, 'size', 0)) for f in uploaded_rosters) if uploaded_rosters else ()
+owned_db = get_owned_players_database(file_tokens=file_tokens, _uploaded_files=uploaded_rosters)
 if owned_db:
     st.sidebar.success(f"Loaded {len(owned_db)} owned players from Fantrax rosters.")
 
