@@ -68,865 +68,320 @@ if 'favorite_players' not in st.session_state:
     st.session_state.favorite_players = set()
 
 # --- 2. PRE-SEEDED FANTASY DATABASE ---
-# Curated list of elite prospects, snipers, and sleepers across 2023-2026 classes
+# Curated list of elite prospects, snipers, sleepers, and post-draft performers across 2023-2026 classes
 @st.cache_data
 def get_preseeded_prospects():
-    return pd.DataFrame([   {   'Goals_Last_Yr': 15,
-        'League': 'NCAA',
-        'NHL_Drafted': True,
-        'NHL_Team': '2026 Draft Eligible',
-        'Name': 'Gavin McKenna',
-        'Notes': 'Franchise winger. Projects for immediate 1PP role. Universal '
-                 'consensus #1 pick.',
-        'Pick': 1,
-        'Pos': 'F',
-        'Projected_PPP': 32.0,
-        'Projected_Pts': 88.5,
-        'Pts_Last_Yr': 51,
-        'Round': 1,
-        'Sleeper_Score': 1.0,
-        'Sniper_Score': 8.5,
-        'Tier': 'Elite',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 25,
-        'League': 'SHL',
-        'NHL_Drafted': True,
-        'NHL_Team': '2026 Draft Eligible',
-        'Name': 'Viggo Björck',
-        'Notes': 'Tier 1 Franchise talent. Undersized but fearless. Highly '
-                 'deceptive shot, excellent on power play.',
-        'Pick': 8,
-        'Pos': 'F',
-        'Projected_PPP': 26.0,
-        'Projected_Pts': 78.0,
-        'Pts_Last_Yr': 65,
-        'Round': 1,
-        'Sleeper_Score': 1.5,
-        'Sniper_Score': 8.0,
-        'Tier': 'Elite',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 11,
-        'League': 'SHL',
-        'NHL_Drafted': True,
-        'NHL_Team': '2026 Draft Eligible',
-        'Name': 'Ivar Stenberg',
-        'Notes': 'Outstanding Swedish playmaker; elite vision and power-play '
-                 'utility.',
-        'Pick': 2,
-        'Pos': 'F',
-        'Projected_PPP': 24.5,
-        'Projected_Pts': 74.0,
-        'Pts_Last_Yr': 33,
-        'Round': 1,
-        'Sleeper_Score': 1.0,
-        'Sniper_Score': 8.0,
-        'Tier': 'Elite',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 29,
-        'League': 'OHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Vancouver Canucks',
-        'Name': 'Caleb Malhotra',
-        'Notes': 'OHL playoff goal-scoring leader. Extremely clutch net-front '
-                 'presence.',
-        'Pick': 3,
-        'Pos': 'F',
-        'Projected_PPP': 23.0,
-        'Projected_Pts': 71.0,
-        'Pts_Last_Yr': 84,
-        'Round': 1,
-        'Sleeper_Score': 2.0,
-        'Sniper_Score': 8.2,
-        'Tier': 'Elite',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 42,
-        'League': 'WHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Detroit Red Wings',
-        'Name': 'J.P. Hurlbert',
-        'Notes': 'High-volume shooter (294 SOG). Rocket of a wrist shot; '
-                 'lethal on 1PP. Michigan commit.',
-        'Pick': 23,
-        'Pos': 'F',
-        'Projected_PPP': 22.5,
-        'Projected_Pts': 70.0,
-        'Pts_Last_Yr': 97,
-        'Round': 1,
-        'Sleeper_Score': 3.0,
-        'Sniper_Score': 9.5,
-        'Tier': 'Sniper',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 45,
-        'League': 'WHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Pittsburgh Penguins',
-        'Name': 'Liam Ruck',
-        'Notes': 'Elite one-touch finisher who scored 45 goals last year. '
-                 'Dynamic duo candidate with twin Markus.',
-        'Pick': 22,
-        'Pos': 'F',
-        'Projected_PPP': 21.0,
-        'Projected_Pts': 68.0,
-        'Pts_Last_Yr': 104,
-        'Round': 1,
-        'Sleeper_Score': 4.0,
-        'Sniper_Score': 9.2,
-        'Tier': 'Sniper',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 30,
-        'League': 'OHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Chicago Blackhawks',
-        'Name': 'Ryan Roobroeck',
-        'Notes': '6\'4" power winger with an NHL-caliber release. Elite '
-                 'net-front trigger option.',
-        'Pick': 35,
-        'Pos': 'F',
-        'Projected_PPP': 19.0,
-        'Projected_Pts': 66.5,
-        'Pts_Last_Yr': 58,
-        'Round': 2,
-        'Sleeper_Score': 5.0,
-        'Sniper_Score': 9.0,
-        'Tier': 'Sniper',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 30,
-        'League': 'OHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Utah Mammoth',
-        'Name': 'Ethan Belchetz',
-        'Notes': 'Pure power forward. Tasmanian Devil on skates, physical '
-                 'force with dominance behind the goal line.',
-        'Pick': 17,
-        'Pos': 'F',
-        'Projected_PPP': 20.0,
-        'Projected_Pts': 66.0,
-        'Pts_Last_Yr': 60,
-        'Round': 1,
-        'Sleeper_Score': 2.5,
-        'Sniper_Score': 8.2,
-        'Tier': 'Elite',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 37,
-        'League': 'OHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Anaheim Ducks',
-        'Name': 'Nikita Klepov',
-        'Notes': '1st Round #15 Anaheim pick. Pure playmaker & 37-goal sniper '
-                 '(97 pts in 67 GP). Michigan State commit.',
-        'Pick': 15,
-        'Pos': 'F',
-        'Projected_PPP': 19.0,
-        'Projected_Pts': 65.5,
-        'Pts_Last_Yr': 97,
-        'Round': 1,
-        'Sleeper_Score': 6.5,
-        'Sniper_Score': 9.1,
-        'Tier': 'Sniper',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 28,
-        'League': 'OHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Calgary Flames',
-        'Name': 'Egor Barabanov',
-        'Notes': 'Calgary 4th-rounder in 2026. Exploded for 91 pts in OHL. '
-                 'Elite playmaking vision and nasty competes.',
-        'Pick': 100,
-        'Pos': 'F',
-        'Projected_PPP': 18.0,
-        'Projected_Pts': 65.5,
-        'Pts_Last_Yr': 91,
-        'Round': 4,
-        'Sleeper_Score': 8.5,
-        'Sniper_Score': 7.2,
-        'Tier': 'Sleeper',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 12,
-        'League': 'OHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Seattle Kraken',
-        'Name': 'Chase Reid',
-        'Notes': 'Top defensive prospect in this draft. Drives possession and '
-                 'pace of play. Great skater, solid 6-foot-2 frame.',
-        'Pick': 7,
-        'Pos': 'D',
-        'Projected_PPP': 23.0,
-        'Projected_Pts': 65.0,
-        'Pts_Last_Yr': 48,
-        'Round': 1,
-        'Sleeper_Score': 1.5,
-        'Sniper_Score': 7.0,
-        'Tier': 'PP Quarterback',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 21,
-        'League': 'WHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Pittsburgh Penguins',
-        'Name': 'Markus Ruck',
-        'Notes': 'Pass-first genius with historic chemistry playing with his '
-                 "brother Liam. CHL's Top Scorer with 108 points.",
-        'Pick': 39,
-        'Pos': 'F',
-        'Projected_PPP': 20.0,
-        'Projected_Pts': 65.0,
-        'Pts_Last_Yr': 108,
-        'Round': 2,
-        'Sleeper_Score': 8.0,
-        'Sniper_Score': 6.5,
-        'Tier': 'Sleeper',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 22,
-        'League': 'NCAA',
-        'NHL_Drafted': True,
-        'NHL_Team': 'St. Louis Blues',
-        'Name': 'Tynan Lawrence',
-        'Notes': 'Smart, solid two-way center who plays with power and energy. '
-                 'Committed to BU.',
-        'Pick': 11,
-        'Pos': 'F',
-        'Projected_PPP': 18.0,
-        'Projected_Pts': 64.0,
-        'Pts_Last_Yr': 58,
-        'Round': 1,
-        'Sleeper_Score': 2.0,
-        'Sniper_Score': 7.0,
-        'Tier': 'Elite',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 24,
-        'League': 'USNTDP',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Nashville Predators',
-        'Name': 'Wyatt Cullen',
-        'Notes': 'High-end hockey sense, puck-handling, and skating. Constant '
-                 'scoring threat.',
-        'Pick': 10,
-        'Pos': 'F',
-        'Projected_PPP': 19.0,
-        'Projected_Pts': 62.0,
-        'Pts_Last_Yr': 55,
-        'Round': 1,
-        'Sleeper_Score': 2.0,
-        'Sniper_Score': 7.5,
-        'Tier': 'Elite',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 34,
-        'League': 'OHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Vancouver Canucks',
-        'Name': 'Adam Novotný',
-        'Notes': 'Blends heavy physical presence with a booming shot off the '
-                 'rush. 30-goal rookie season.',
-        'Pick': 24,
-        'Pos': 'F',
-        'Projected_PPP': 17.5,
-        'Projected_Pts': 62.0,
-        'Pts_Last_Yr': 65,
-        'Round': 1,
-        'Sleeper_Score': 4.0,
-        'Sniper_Score': 8.8,
-        'Tier': 'Sniper',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 20,
-        'League': 'WHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Calgary Flames',
-        'Name': 'Carson Carels',
-        'Notes': 'Highly mobile blueliner. Elite puck distributor built to run '
-                 'a power play. Fourth in WHL defense scoring with 73 points.',
-        'Pick': 6,
-        'Pos': 'D',
-        'Projected_PPP': 21.0,
-        'Projected_Pts': 60.5,
-        'Pts_Last_Yr': 73,
-        'Round': 1,
-        'Sleeper_Score': 2.0,
-        'Sniper_Score': 7.5,
-        'Tier': 'PP Quarterback',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 30,
-        'League': 'QMJHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'St. Louis Blues',
-        'Name': 'Maddox Dagenais',
-        'Notes': 'Big 6\'4" frame with a lethal mid-range shot. High hockey '
-                 'IQ.',
-        'Pick': 16,
-        'Pos': 'F',
-        'Projected_PPP': 16.0,
-        'Projected_Pts': 59.5,
-        'Pts_Last_Yr': 62,
-        'Round': 1,
-        'Sleeper_Score': 3.0,
-        'Sniper_Score': 8.5,
-        'Tier': 'Sniper',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 28,
-        'League': 'WHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Buffalo Sabres',
-        'Name': 'Daxon Rudolph',
-        'Notes': 'Elite offensive defenseman. High-volume shooter and pure 1PP '
-                 'QB.',
-        'Pick': 4,
-        'Pos': 'D',
-        'Projected_PPP': 22.0,
-        'Projected_Pts': 58.0,
-        'Pts_Last_Yr': 78,
-        'Round': 1,
-        'Sleeper_Score': 2.0,
-        'Sniper_Score': 8.0,
-        'Tier': 'PP Quarterback',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 15,
-        'League': 'QMJHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Nashville Predators',
-        'Name': 'Tommy Bleyl',
-        'Notes': 'Highly skilled two-way defender who came out of nowhere to '
-                 'score 81 points as a QMJHL rookie. Exceptionally crafty.',
-        'Pick': 31,
-        'Pos': 'D',
-        'Projected_PPP': 21.0,
-        'Projected_Pts': 58.0,
-        'Pts_Last_Yr': 81,
-        'Round': 1,
-        'Sleeper_Score': 6.5,
-        'Sniper_Score': 8.0,
-        'Tier': 'PP Quarterback',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 15,
-        'League': 'NCAA',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Nashville Predators',
-        'Name': 'Aiden Fink',
-        'Notes': 'Unowned 7th-round steal. Absolutely crushed NCAA scoring '
-                 'with Penn State as a freshman. Small, highly elusive '
-                 'playmaker.',
-        'Pick': 218,
-        'Pos': 'F',
-        'Projected_PPP': 19.0,
-        'Projected_Pts': 58.0,
-        'Pts_Last_Yr': 34,
-        'Round': 7,
-        'Sleeper_Score': 9.0,
-        'Sniper_Score': 7.2,
-        'Tier': 'Sleeper',
-        'Year': 2023},
-    {   'Goals_Last_Yr': 20,
-        'League': 'Sweden Jr',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Vancouver Canucks',
-        'Name': 'Niklas Aaram-Olsen',
-        'Notes': 'Elite-level snap shot and rapid release. Strong performance '
-                 'at World Juniors.',
-        'Pick': 41,
-        'Pos': 'F',
-        'Projected_PPP': 15.0,
-        'Projected_Pts': 55.0,
-        'Pts_Last_Yr': 40,
-        'Round': 2,
-        'Sleeper_Score': 7.0,
-        'Sniper_Score': 8.6,
-        'Tier': 'Sniper',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 18,
-        'League': 'QMJHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Chicago Blackhawks',
-        'Name': 'Xavier Villeneuve',
-        'Notes': 'Elite power play quarterback with excellent vision from the '
-                 'point. Helped Canada win gold at U-18s.',
-        'Pick': 34,
-        'Pos': 'D',
-        'Projected_PPP': 22.0,
-        'Projected_Pts': 55.0,
-        'Pts_Last_Yr': 62,
-        'Round': 2,
-        'Sleeper_Score': 3.0,
-        'Sniper_Score': 7.5,
-        'Tier': 'PP Quarterback',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 16,
-        'League': 'NCAA',
-        'NHL_Drafted': True,
-        'NHL_Team': 'New York Islanders',
-        'Name': 'Danny Nelson',
-        'Notes': 'Unowned Islanders 2nd-rounder. Big, physical Notre Dame '
-                 'scoring center.',
-        'Pick': 49,
-        'Pos': 'F',
-        'Projected_PPP': 14.5,
-        'Projected_Pts': 55.0,
-        'Pts_Last_Yr': 32,
-        'Round': 2,
-        'Sleeper_Score': 7.8,
-        'Sniper_Score': 7.0,
-        'Tier': 'Sleeper',
-        'Year': 2023},
-    {   'Goals_Last_Yr': 24,
-        'League': 'WHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Colorado Avalanche',
-        'Name': 'Beckett Hamilton',
-        'Notes': "Dragged Red Deer's offense singlehandedly. High-compete with "
-                 'massive ceiling. Colorado 3rd-rounder in 2026.',
-        'Pick': 74,
-        'Pos': 'F',
-        'Projected_PPP': 14.0,
-        'Projected_Pts': 54.0,
-        'Pts_Last_Yr': 62,
-        'Round': 3,
-        'Sleeper_Score': 8.5,
-        'Sniper_Score': 7.0,
-        'Tier': 'Sleeper',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 14,
-        'League': 'Sweden Jr',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Colorado Avalanche',
-        'Name': 'Axel Elofsson',
-        'Notes': 'Colorado 4th-rounder in 2026. Swedish puck-mover. Virtuoso '
-                 'skater with dynamic perimeter play. Built for running 1PP '
-                 'units.',
-        'Pick': 128,
-        'Pos': 'D',
-        'Projected_PPP': 19.5,
-        'Projected_Pts': 53.0,
-        'Pts_Last_Yr': 42,
-        'Round': 4,
-        'Sleeper_Score': 8.5,
-        'Sniper_Score': 7.0,
-        'Tier': 'Sleeper',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 12,
-        'League': 'NCAA',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Florida Panthers',
-        'Name': 'Kamil Bednarik',
-        'Notes': 'Unowned Florida 2nd-rounder. Smart USNTDP playmaking center '
-                 'with high-end offensive hockey sense heading to BU.',
-        'Pick': 61,
-        'Pos': 'F',
-        'Projected_PPP': 15.0,
-        'Projected_Pts': 53.0,
-        'Pts_Last_Yr': 30,
-        'Round': 2,
-        'Sleeper_Score': 8.0,
-        'Sniper_Score': 6.5,
-        'Tier': 'Sleeper',
-        'Year': 2024},
-    {   'Goals_Last_Yr': 8,
-        'League': 'SHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'St. Louis Blues',
-        'Name': 'Theo Lindstein',
-        'Notes': 'Unowned Swedish playmaker. St. Louis 1st-rounder who '
-                 'dominated the World Juniors with elite vision and PP QB '
-                 'play.',
-        'Pick': 29,
-        'Pos': 'D',
-        'Projected_PPP': 18.0,
-        'Projected_Pts': 52.0,
-        'Pts_Last_Yr': 31,
-        'Round': 1,
-        'Sleeper_Score': 9.0,
-        'Sniper_Score': 6.0,
-        'Tier': 'Sleeper',
-        'Year': 2023},
-    {   'Goals_Last_Yr': 22,
-        'League': 'Finland Jr',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Buffalo Sabres',
-        'Name': 'Domán Kristóf Szongoth',
-        'Notes': 'Buffalo 5th-rounder in 2026. Dynamic Hungarian-born '
-                 'speedster. Dangerous shot release; joining Greyhounds in '
-                 'OHL.',
-        'Pick': 156,
-        'Pos': 'F',
-        'Projected_PPP': 15.0,
-        'Projected_Pts': 52.0,
-        'Pts_Last_Yr': 45,
-        'Round': 5,
-        'Sleeper_Score': 8.5,
-        'Sniper_Score': 7.5,
-        'Tier': 'Sleeper',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 10,
-        'League': 'NCAA',
-        'NHL_Drafted': True,
-        'NHL_Team': '2026 Draft Eligible',
-        'Name': 'Keaton Verhoeff',
-        'Notes': 'Calm demeanor, takes up a ton of space at 6-foot-4. '
-                 'Committed to UND, raw but sky-high ceiling.',
-        'Pick': 9,
-        'Pos': 'D',
-        'Projected_PPP': 18.0,
-        'Projected_Pts': 52.0,
-        'Pts_Last_Yr': 35,
-        'Round': 1,
-        'Sleeper_Score': 2.0,
-        'Sniper_Score': 6.5,
-        'Tier': 'PP Quarterback',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 4,
-        'League': 'Liiga',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Minnesota Wild',
-        'Name': 'Aron Kiviharju',
-        'Notes': 'Unowned top-tier steal! Formerly ranked top-5 overall before '
-                 'a knee injury. Generational hockey IQ and elite playmaker.',
-        'Pick': 122,
-        'Pos': 'D',
-        'Projected_PPP': 21.0,
-        'Projected_Pts': 51.5,
-        'Pts_Last_Yr': 12,
-        'Round': 4,
-        'Sleeper_Score': 9.5,
-        'Sniper_Score': 5.0,
-        'Tier': 'Sleeper',
-        'Year': 2024},
-    {   'Goals_Last_Yr': 24,
-        'League': 'Finland Jr',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Calgary Flames',
-        'Name': 'Simon Katolicky',
-        'Notes': 'Calgary 5th-rounder in 2026. 6\'6" Finnish giant power '
-                 'forward. Unbelievable net-front utility and screen presence.',
-        'Pick': 132,
-        'Pos': 'F',
-        'Projected_PPP': 13.0,
-        'Projected_Pts': 51.0,
-        'Pts_Last_Yr': 40,
-        'Round': 5,
-        'Sleeper_Score': 8.0,
-        'Sniper_Score': 6.8,
-        'Tier': 'Sleeper',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 29,
-        'League': 'WHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Columbus Blue Jackets',
-        'Name': 'Jonas Woo',
-        'Notes': 'WHL defenseman scoring leader with 86 points in 56 games. '
-                 'Columbus 6th-rounder in 2026. Elite value target for deep '
-                 'leagues.',
-        'Pick': 185,
-        'Pos': 'D',
-        'Projected_PPP': 16.5,
-        'Projected_Pts': 51.0,
-        'Pts_Last_Yr': 86,
-        'Round': 6,
-        'Sleeper_Score': 10.0,
-        'Sniper_Score': 8.0,
-        'Tier': 'Sleeper',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 4,
-        'League': 'Czechia',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Pittsburgh Penguins',
-        'Name': 'Tomáš Galvas',
-        'Notes': 'Pittsburgh 2nd-rounder in 2026. Elite transition skater. '
-                 'Calm, composed puck carrier who dominated WJC play.',
-        'Pick': 54,
-        'Pos': 'D',
-        'Projected_PPP': 16.0,
-        'Projected_Pts': 50.0,
-        'Pts_Last_Yr': 22,
-        'Round': 2,
-        'Sleeper_Score': 9.0,
-        'Sniper_Score': 4.5,
-        'Tier': 'Sleeper',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 5,
-        'League': 'KHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Utah Hockey Club',
-        'Name': 'Dmitriy Simashev',
-        'Notes': "Unowned 6th overall pick from 2023. Massive 6'4 skating "
-                 'wizard developing highly potent offensive transition game.',
-        'Pick': 6,
-        'Pos': 'D',
-        'Projected_PPP': 15.0,
-        'Projected_Pts': 49.0,
-        'Pts_Last_Yr': 18,
-        'Round': 1,
-        'Sleeper_Score': 8.5,
-        'Sniper_Score': 4.5,
-        'Tier': 'Sleeper',
-        'Year': 2023},
-    {   'Goals_Last_Yr': 8,
-        'League': 'DEL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'New York Rangers',
-        'Name': 'Alberts Šmits',
-        'Notes': '6-foot-3 physical, engaged defender. Played against men in '
-                 'Finland and Germany, and represented Latvia at Olympics.',
-        'Pick': 5,
-        'Pos': 'D',
-        'Projected_PPP': 15.0,
-        'Projected_Pts': 48.0,
-        'Pts_Last_Yr': 28,
-        'Round': 1,
-        'Sleeper_Score': 2.0,
-        'Sniper_Score': 6.0,
-        'Tier': 'PP Quarterback',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 11,
-        'League': 'WHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Montreal Canadiens',
-        'Name': 'Timofei Runtso',
-        'Notes': 'Montreal 2nd-rounder in 2026. Rugged, heavy-hitting WHL '
-                 'blueliner who exploded offensively. Committing to Miami '
-                 'University.',
-        'Pick': 57,
-        'Pos': 'D',
-        'Projected_PPP': 14.5,
-        'Projected_Pts': 48.0,
-        'Pts_Last_Yr': 36,
-        'Round': 2,
-        'Sleeper_Score': 8.5,
-        'Sniper_Score': 5.8,
-        'Tier': 'Sleeper',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 6,
-        'League': 'Sweden Jr',
-        'NHL_Drafted': True,
-        'NHL_Team': '2026 Draft Eligible',
-        'Name': 'Leo Sahlin Wallenius',
-        'Notes': 'Unowned Sharks 2nd-rounder. Sleek, beautiful skater with '
-                 'high-end offensive transition potential.',
-        'Pick': 53,
-        'Pos': 'D',
-        'Projected_PPP': 16.0,
-        'Projected_Pts': 48.0,
-        'Pts_Last_Yr': 28,
-        'Round': 2,
-        'Sleeper_Score': 8.0,
-        'Sniper_Score': 5.5,
-        'Tier': 'Sleeper',
-        'Year': 2024},
-    {   'Goals_Last_Yr': 10,
-        'League': 'WHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Seattle Kraken',
-        'Name': 'Caden Price',
-        'Notes': 'Unowned Seattle 3rd-rounder. Smooth-skating, highly mobile '
-                 'defenseman who has seen his point totals explode in the WHL.',
-        'Pick': 84,
-        'Pos': 'D',
-        'Projected_PPP': 15.0,
-        'Projected_Pts': 47.0,
-        'Pts_Last_Yr': 55,
-        'Round': 3,
-        'Sleeper_Score': 8.0,
-        'Sniper_Score': 6.0,
-        'Tier': 'Sleeper',
-        'Year': 2023},
-    {   'Goals_Last_Yr': 27,
-        'League': 'WHL',
-        'NHL_Drafted': False,
-        'NHL_Team': 'Arizona Coyotes',
-        'Name': 'Lukas Sawchyn',
-        'Notes': 'Unowned overager. Pure power-play maestro with elite '
-                 'edgework and playmaking. ASU commit.',
-        'Pick': 80,
-        'Pos': 'F',
-        'Projected_PPP': 20.0,
-        'Projected_Pts': 64.0,
-        'Pts_Last_Yr': 88,
-        'Round': 3,
-        'Sleeper_Score': 9.0,
-        'Sniper_Score': 6.8,
-        'Tier': 'Sleeper',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 38,
-        'League': 'QMJHL',
-        'NHL_Drafted': False,
-        'NHL_Team': 'Colorado Avalanche',
-        'Name': 'Félix Lacerte',
-        'Notes': 'Unowned overager. Slick playmaker with an elite shot release '
-                 'and highlight-reel stickhandling. Vermont commit.',
-        'Pick': 105,
-        'Pos': 'F',
-        'Projected_PPP': 21.0,
-        'Projected_Pts': 63.0,
-        'Pts_Last_Yr': 86,
-        'Round': 4,
-        'Sleeper_Score': 8.5,
-        'Sniper_Score': 8.2,
-        'Tier': 'Sleeper',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 43,
-        'League': 'QMJHL',
-        'NHL_Drafted': False,
-        'NHL_Team': 'Detroit Red Wings',
-        'Name': 'Philippe Veilleux',
-        'Notes': 'Unowned overager. Incredibly productive junior star with 43 '
-                 'goals and high-octane offensive IQ.',
-        'Pick': 195,
-        'Pos': 'F',
-        'Projected_PPP': 18.0,
-        'Projected_Pts': 62.0,
-        'Pts_Last_Yr': 96,
-        'Round': 6,
-        'Sleeper_Score': 8.8,
-        'Sniper_Score': 8.0,
-        'Tier': 'Sleeper',
-        'Year': 2026},
-    {   'Goals_Last_Yr': 18,
-        'League': 'NCAA',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Boston Bruins',
-        'Name': 'James Hagens',
-        'Notes': 'Dynamic center with world-class playmaking and elite '
-                 'power-play vision.',
-        'Pick': 7,
-        'Pos': 'F',
-        'Projected_PPP': 28.0,
-        'Projected_Pts': 81.0,
-        'Pts_Last_Yr': 47,
-        'Round': 1,
-        'Sleeper_Score': 1.0,
-        'Sniper_Score': 7.5,
-        'Tier': 'Elite',
-        'Year': 2025},
-    {   'Goals_Last_Yr': 33,
-        'League': 'OHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Philadelphia Flyers',
-        'Name': 'Porter Martone',
-        'Notes': 'Power forward who dominates net-front and eats up power play '
-                 'goals.',
-        'Pick': 6,
-        'Pos': 'F',
-        'Projected_PPP': 23.0,
-        'Projected_Pts': 76.5,
-        'Pts_Last_Yr': 71,
-        'Round': 1,
-        'Sleeper_Score': 1.0,
-        'Sniper_Score': 8.8,
-        'Tier': 'Elite',
-        'Year': 2025},
-    {   'Goals_Last_Yr': 28,
-        'League': 'OHL',
-        'NHL_Drafted': True,
-        'NHL_Team': '2026 Draft Eligible',
-        'Name': 'Michael Misa',
-        'Notes': 'Exceptional status player with elite speed, processing, and '
-                 'finishing.',
-        'Pick': 2,
-        'Pos': 'F',
-        'Projected_PPP': 21.0,
-        'Projected_Pts': 72.0,
-        'Pts_Last_Yr': 75,
-        'Round': 1,
-        'Sleeper_Score': 2.5,
-        'Sniper_Score': 8.2,
-        'Tier': 'Elite',
-        'Year': 2025},
-    {   'Goals_Last_Yr': 32,
-        'League': 'NHL',
-        'NHL_Drafted': True,
-        'NHL_Team': '2026 Draft Eligible',
-        'Name': 'Macklin Celebrini',
-        'Notes': 'Franchise 1C. Shoots with high-end volume and dominates all '
-                 'point situations.',
-        'Pick': 1,
-        'Pos': 'F',
-        'Projected_PPP': 30.0,
-        'Projected_Pts': 84.0,
-        'Pts_Last_Yr': 64,
-        'Round': 1,
-        'Sleeper_Score': 1.0,
-        'Sniper_Score': 8.9,
-        'Tier': 'Elite',
-        'Year': 2024},
-    {   'Goals_Last_Yr': 9,
-        'League': 'AHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Chicago Blackhawks',
-        'Name': 'Artyom Levshunov',
-        'Notes': 'Highly athletic defenseman. Projects to quarterback '
-                 "Chicago's 1PP unit.",
-        'Pick': 2,
-        'Pos': 'D',
-        'Projected_PPP': 16.5,
-        'Projected_Pts': 48.0,
-        'Pts_Last_Yr': 35,
-        'Round': 1,
-        'Sleeper_Score': 2.0,
-        'Sniper_Score': 7.0,
-        'Tier': 'PP Quarterback',
-        'Year': 2024},
-    {   'Goals_Last_Yr': 23,
-        'League': 'MHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Montreal Canadiens',
-        'Name': 'Ivan Demidov',
-        'Notes': 'Incredibly creative winger with elite perimeter play and PP '
-                 'control.',
-        'Pick': 5,
-        'Pos': 'F',
-        'Projected_PPP': 26.0,
-        'Projected_Pts': 78.0,
-        'Pts_Last_Yr': 60,
-        'Round': 1,
-        'Sleeper_Score': 1.2,
-        'Sniper_Score': 8.1,
-        'Tier': 'Elite',
-        'Year': 2024},
-    {   'Goals_Last_Yr': 22,
-        'League': 'NHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Chicago Blackhawks',
-        'Name': 'Connor Bedard',
-        'Notes': 'Generational sniper. Top-tier power play release from the '
-                 'left circle.',
-        'Pick': 1,
-        'Pos': 'F',
-        'Projected_PPP': 34.0,
-        'Projected_Pts': 92.0,
-        'Pts_Last_Yr': 61,
-        'Round': 1,
-        'Sleeper_Score': 1.0,
-        'Sniper_Score': 9.8,
-        'Tier': 'Elite',
-        'Year': 2023},
-    {   'Goals_Last_Yr': 12,
-        'League': 'NHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Anaheim Ducks',
-        'Name': 'Leo Carlsson',
-        'Notes': 'Highly intelligent playmaker with excellent puck retention '
-                 'skills.',
-        'Pick': 2,
-        'Pos': 'F',
-        'Projected_PPP': 22.0,
-        'Projected_Pts': 70.0,
-        'Pts_Last_Yr': 29,
-        'Round': 1,
-        'Sleeper_Score': 1.5,
-        'Sniper_Score': 7.8,
-        'Tier': 'Elite',
-        'Year': 2023},
-    {   'Goals_Last_Yr': 20,
-        'League': 'NHL',
-        'NHL_Drafted': True,
-        'NHL_Team': 'Columbus Blue Jackets',
-        'Name': 'Adam Fantilli',
-        'Notes': 'Power forward package with a elite wrister. Projects to '
-                 'dominate top PP line.',
-        'Pick': 3,
-        'Pos': 'F',
-        'Projected_PPP': 21.0,
-        'Projected_Pts': 71.5,
-        'Pts_Last_Yr': 40,
-        'Round': 1,
-        'Sleeper_Score': 1.5,
-        'Sniper_Score': 8.4,
-        'Tier': 'Elite',
-        'Year': 2023}])
+    data = [
+        # 2026 Class
+        {
+            'Name': 'Gavin McKenna', 'Year': 2026, 'Round': 1, 'Pick': 1, 'NHL_Team': '2026 Draft Eligible',
+            'Pos': 'F', 'Projected_Pts': 88.5, 'Projected_PPP': 32.0, 'GP': 35, 'Goals_Last_Yr': 15, 'Assists_Last_Yr': 36, 'Pts_Last_Yr': 51,
+            'League': 'NCAA', 'Tier': 'Elite', 'Sniper_Score': 8.5, 'Sleeper_Score': 1.0, 'NHL_Drafted': True,
+            'Notes': 'Franchise winger. Projects for immediate 1PP role. Universal consensus #1 pick.'
+        },
+        {
+            'Name': 'Viggo Björck', 'Year': 2026, 'Round': 1, 'Pick': 8, 'NHL_Team': '2026 Draft Eligible',
+            'Pos': 'F', 'Projected_Pts': 78.0, 'Projected_PPP': 26.0, 'GP': 42, 'Goals_Last_Yr': 25, 'Assists_Last_Yr': 40, 'Pts_Last_Yr': 65,
+            'League': 'SHL', 'Tier': 'Elite', 'Sniper_Score': 8.0, 'Sleeper_Score': 1.5, 'NHL_Drafted': True,
+            'Notes': 'Tier 1 Franchise talent. Undersized but fearless. Highly deceptive shot, excellent on power play.'
+        },
+        {
+            'Name': 'Ivar Stenberg', 'Year': 2026, 'Round': 1, 'Pick': 2, 'NHL_Team': '2026 Draft Eligible',
+            'Pos': 'F', 'Projected_Pts': 74.0, 'Projected_PPP': 24.5, 'GP': 38, 'Goals_Last_Yr': 11, 'Assists_Last_Yr': 22, 'Pts_Last_Yr': 33,
+            'League': 'SHL', 'Tier': 'Elite', 'Sniper_Score': 8.0, 'Sleeper_Score': 1.0, 'NHL_Drafted': True,
+            'Notes': 'Outstanding Swedish playmaker; elite vision and power-play utility.'
+        },
+        {
+            'Name': 'Caleb Malhotra', 'Year': 2026, 'Round': 1, 'Pick': 3, 'NHL_Team': 'Vancouver Canucks',
+            'Pos': 'F', 'Projected_Pts': 71.0, 'Projected_PPP': 23.0, 'GP': 68, 'Goals_Last_Yr': 29, 'Assists_Last_Yr': 55, 'Pts_Last_Yr': 84,
+            'League': 'OHL', 'Tier': 'Elite', 'Sniper_Score': 8.2, 'Sleeper_Score': 2.0, 'NHL_Drafted': True,
+            'Notes': 'OHL playoff goal-scoring leader. Extremely clutch net-front presence.'
+        },
+        {
+            'Name': 'J.P. Hurlbert', 'Year': 2026, 'Round': 1, 'Pick': 23, 'NHL_Team': 'Detroit Red Wings',
+            'Pos': 'F', 'Projected_Pts': 70.0, 'Projected_PPP': 22.5, 'GP': 68, 'Goals_Last_Yr': 42, 'Assists_Last_Yr': 55, 'Pts_Last_Yr': 97,
+            'League': 'WHL', 'Tier': 'Sniper', 'Sniper_Score': 9.5, 'Sleeper_Score': 3.0, 'NHL_Drafted': True,
+            'Notes': 'High-volume shooter (294 SOG). Rocket of a wrist shot; lethal on 1PP. Michigan commit.'
+        },
+        {
+            'Name': 'Liam Ruck', 'Year': 2026, 'Round': 1, 'Pick': 22, 'NHL_Team': 'Pittsburgh Penguins',
+            'Pos': 'F', 'Projected_Pts': 68.0, 'Projected_PPP': 21.0, 'GP': 68, 'Goals_Last_Yr': 45, 'Assists_Last_Yr': 59, 'Pts_Last_Yr': 104,
+            'League': 'WHL', 'Tier': 'Sniper', 'Sniper_Score': 9.2, 'Sleeper_Score': 4.0, 'NHL_Drafted': True,
+            'Notes': 'Elite one-touch finisher who scored 45 goals last year. Dynamic duo candidate with twin Markus.'
+        },
+        {
+            'Name': 'Ryan Roobroeck', 'Year': 2026, 'Round': 2, 'Pick': 35, 'NHL_Team': 'Chicago Blackhawks',
+            'Pos': 'F', 'Projected_Pts': 66.5, 'Projected_PPP': 19.0, 'GP': 62, 'Goals_Last_Yr': 30, 'Assists_Last_Yr': 28, 'Pts_Last_Yr': 58,
+            'League': 'OHL', 'Tier': 'Sniper', 'Sniper_Score': 9.0, 'Sleeper_Score': 5.0, 'NHL_Drafted': True,
+            'Notes': '6-foot-4 power winger with an NHL-caliber release. Elite net-front trigger option.'
+        },
+        {
+            'Name': 'Ethan Belchetz', 'Year': 2026, 'Round': 1, 'Pick': 17, 'NHL_Team': 'Utah Mammoth',
+            'Pos': 'F', 'Projected_Pts': 66.0, 'Projected_PPP': 20.0, 'GP': 60, 'Goals_Last_Yr': 30, 'Assists_Last_Yr': 30, 'Pts_Last_Yr': 60,
+            'League': 'OHL', 'Tier': 'Elite', 'Sniper_Score': 8.2, 'Sleeper_Score': 2.5, 'NHL_Drafted': True,
+            'Notes': 'Pure power forward. Tasmanian Devil on skates, physical force with dominance behind the goal line.'
+        },
+        {
+            'Name': 'Nikita Klepov', 'Year': 2026, 'Round': 1, 'Pick': 15, 'NHL_Team': 'Anaheim Ducks',
+            'Pos': 'F', 'Projected_Pts': 65.5, 'Projected_PPP': 19.0, 'GP': 67, 'Goals_Last_Yr': 37, 'Assists_Last_Yr': 60, 'Pts_Last_Yr': 97,
+            'League': 'OHL', 'Tier': 'Sniper', 'Sniper_Score': 9.1, 'Sleeper_Score': 6.5, 'NHL_Drafted': True,
+            'Notes': '1st Round #15 Anaheim pick. Pure playmaker & 37-goal sniper (97 pts in 67 GP). Michigan State commit.'
+        },
+        {
+            'Name': 'Egor Barabanov', 'Year': 2026, 'Round': 4, 'Pick': 100, 'NHL_Team': 'Calgary Flames',
+            'Pos': 'F', 'Projected_Pts': 65.5, 'Projected_PPP': 18.0, 'GP': 68, 'Goals_Last_Yr': 28, 'Assists_Last_Yr': 63, 'Pts_Last_Yr': 91,
+            'League': 'OHL', 'Tier': 'Sleeper', 'Sniper_Score': 7.2, 'Sleeper_Score': 8.5, 'NHL_Drafted': True,
+            'Notes': 'Calgary 4th-rounder in 2026. Exploded for 91 pts in OHL. Elite playmaking vision and nasty competes.'
+        },
+        {
+            'Name': 'Chase Reid', 'Year': 2026, 'Round': 1, 'Pick': 7, 'NHL_Team': 'Seattle Kraken',
+            'Pos': 'D', 'Projected_Pts': 65.0, 'Projected_PPP': 23.0, 'GP': 64, 'Goals_Last_Yr': 12, 'Assists_Last_Yr': 36, 'Pts_Last_Yr': 48,
+            'League': 'OHL', 'Tier': 'PP Quarterback', 'Sniper_Score': 7.0, 'Sleeper_Score': 1.5, 'NHL_Drafted': True,
+            'Notes': 'Top defensive prospect in this draft. Drives possession and pace of play. Great skater, solid 6-foot-2 frame.'
+        },
+        {
+            'Name': 'Markus Ruck', 'Year': 2026, 'Round': 2, 'Pick': 39, 'NHL_Team': 'Pittsburgh Penguins',
+            'Pos': 'F', 'Projected_Pts': 65.0, 'Projected_PPP': 20.0, 'GP': 68, 'Goals_Last_Yr': 21, 'Assists_Last_Yr': 87, 'Pts_Last_Yr': 108,
+            'League': 'WHL', 'Tier': 'Sleeper', 'Sniper_Score': 6.5, 'Sleeper_Score': 8.0, 'NHL_Drafted': True,
+            'Notes': 'Pass-first genius with historic chemistry playing with his brother Liam. CHL\'s Top Scorer with 108 points.'
+        },
+        {
+            'Name': 'Tynan Lawrence', 'Year': 2026, 'Round': 1, 'Pick': 11, 'NHL_Team': 'St. Louis Blues',
+            'Pos': 'F', 'Projected_Pts': 64.0, 'Projected_PPP': 18.0, 'GP': 54, 'Goals_Last_Yr': 22, 'Assists_Last_Yr': 36, 'Pts_Last_Yr': 58,
+            'League': 'NCAA', 'Tier': 'Elite', 'Sniper_Score': 7.0, 'Sleeper_Score': 2.0, 'NHL_Drafted': True,
+            'Notes': 'Smart, solid two-way center who plays with power and energy. Committed to BU.'
+        },
+        {
+            'Name': 'Wyatt Cullen', 'Year': 2026, 'Round': 1, 'Pick': 10, 'NHL_Team': 'Nashville Predators',
+            'Pos': 'F', 'Projected_Pts': 62.0, 'Projected_PPP': 19.0, 'GP': 52, 'Goals_Last_Yr': 24, 'Assists_Last_Yr': 31, 'Pts_Last_Yr': 55,
+            'League': 'USNTDP', 'Tier': 'Elite', 'Sniper_Score': 7.5, 'Sleeper_Score': 2.0, 'NHL_Drafted': True,
+            'Notes': 'High-end hockey sense, puck-handling, and skating. Constant scoring threat.'
+        },
+        {
+            'Name': 'Adam Novotný', 'Year': 2026, 'Round': 1, 'Pick': 24, 'NHL_Team': 'Vancouver Canucks',
+            'Pos': 'F', 'Projected_Pts': 62.0, 'Projected_PPP': 17.5, 'GP': 62, 'Goals_Last_Yr': 34, 'Assists_Last_Yr': 31, 'Pts_Last_Yr': 65,
+            'League': 'OHL', 'Tier': 'Sniper', 'Sniper_Score': 8.8, 'Sleeper_Score': 4.0, 'NHL_Drafted': True,
+            'Notes': 'Blends heavy physical presence with a booming shot off the rush. 30-goal rookie season.'
+        },
+        {
+            'Name': 'Carson Carels', 'Year': 2026, 'Round': 1, 'Pick': 6, 'NHL_Team': 'Calgary Flames',
+            'Pos': 'D', 'Projected_Pts': 60.5, 'Projected_PPP': 21.0, 'GP': 66, 'Goals_Last_Yr': 20, 'Assists_Last_Yr': 53, 'Pts_Last_Yr': 73,
+            'League': 'WHL', 'Tier': 'PP Quarterback', 'Sniper_Score': 7.5, 'Sleeper_Score': 2.0, 'NHL_Drafted': True,
+            'Notes': 'Highly mobile blueliner. Elite puck distributor built to run a power play. Fourth in WHL defense scoring with 73 points.'
+        },
+        {
+            'Name': 'Maddox Dagenais', 'Year': 2026, 'Round': 1, 'Pick': 16, 'NHL_Team': 'St. Louis Blues',
+            'Pos': 'F', 'Projected_Pts': 59.5, 'Projected_PPP': 16.0, 'GP': 60, 'Goals_Last_Yr': 30, 'Assists_Last_Yr': 32, 'Pts_Last_Yr': 62,
+            'League': 'QMJHL', 'Tier': 'Sniper', 'Sniper_Score': 8.5, 'Sleeper_Score': 3.0, 'NHL_Drafted': True,
+            'Notes': 'Big 6-foot-4 frame with a lethal mid-range shot. High hockey IQ.'
+        },
+        {
+            'Name': 'Daxon Rudolph', 'Year': 2026, 'Round': 1, 'Pick': 4, 'NHL_Team': 'Buffalo Sabres',
+            'Pos': 'D', 'Projected_Pts': 58.0, 'Projected_PPP': 22.0, 'GP': 65, 'Goals_Last_Yr': 28, 'Assists_Last_Yr': 50, 'Pts_Last_Yr': 78,
+            'League': 'WHL', 'Tier': 'PP Quarterback', 'Sniper_Score': 8.0, 'Sleeper_Score': 2.0, 'NHL_Drafted': True,
+            'Notes': 'Elite offensive defenseman. High-volume shooter and pure 1PP QB.'
+        },
+        {
+            'Name': 'Tommy Bleyl', 'Year': 2026, 'Round': 1, 'Pick': 31, 'NHL_Team': 'Nashville Predators',
+            'Pos': 'D', 'Projected_Pts': 58.0, 'Projected_PPP': 21.0, 'GP': 64, 'Goals_Last_Yr': 15, 'Assists_Last_Yr': 66, 'Pts_Last_Yr': 81,
+            'League': 'QMJHL', 'Tier': 'PP Quarterback', 'Sniper_Score': 8.0, 'Sleeper_Score': 6.5, 'NHL_Drafted': True,
+            'Notes': 'Highly skilled two-way defender who came out of nowhere to score 81 points as a QMJHL rookie. Exceptionally crafty.'
+        },
+        {
+            'Name': 'Aiden Fink', 'Year': 2023, 'Round': 7, 'Pick': 218, 'NHL_Team': 'Nashville Predators',
+            'Pos': 'F', 'Projected_Pts': 58.0, 'Projected_PPP': 19.0, 'GP': 34, 'Goals_Last_Yr': 15, 'Assists_Last_Yr': 19, 'Pts_Last_Yr': 34,
+            'League': 'NCAA', 'Tier': 'Sleeper', 'Sniper_Score': 7.2, 'Sleeper_Score': 9.0, 'NHL_Drafted': True,
+            'Notes': 'Unowned 7th-round steal. Absolutely crushed NCAA scoring with Penn State as a freshman. Small, highly elusive playmaker.'
+        },
+        {
+            'Name': 'Niklas Aaram-Olsen', 'Year': 2026, 'Round': 2, 'Pick': 41, 'NHL_Team': 'Vancouver Canucks',
+            'Pos': 'F', 'Projected_Pts': 55.0, 'Projected_PPP': 15.0, 'GP': 45, 'Goals_Last_Yr': 20, 'Assists_Last_Yr': 20, 'Pts_Last_Yr': 40,
+            'League': 'Sweden Jr', 'Tier': 'Sniper', 'Sniper_Score': 8.6, 'Sleeper_Score': 7.0, 'NHL_Drafted': True,
+            'Notes': 'Elite-level snap shot and rapid release. Strong performance at World Juniors.'
+        },
+        {
+            'Name': 'Xavier Villeneuve', 'Year': 2026, 'Round': 2, 'Pick': 34, 'NHL_Team': 'Chicago Blackhawks',
+            'Pos': 'D', 'Projected_Pts': 55.0, 'Projected_PPP': 22.0, 'GP': 62, 'Goals_Last_Yr': 18, 'Assists_Last_Yr': 44, 'Pts_Last_Yr': 62,
+            'League': 'QMJHL', 'Tier': 'PP Quarterback', 'Sniper_Score': 7.5, 'Sleeper_Score': 3.0, 'NHL_Drafted': True,
+            'Notes': 'Elite power play quarterback with excellent vision from the point. Helped Canada win gold at U-18s.'
+        },
+        {
+            'Name': 'Danny Nelson', 'Year': 2023, 'Round': 2, 'Pick': 49, 'NHL_Team': 'New York Islanders',
+            'Pos': 'F', 'Projected_Pts': 55.0, 'Projected_PPP': 14.5, 'GP': 37, 'Goals_Last_Yr': 16, 'Assists_Last_Yr': 16, 'Pts_Last_Yr': 32,
+            'League': 'NCAA', 'Tier': 'Sleeper', 'Sniper_Score': 7.0, 'Sleeper_Score': 7.8, 'NHL_Drafted': True,
+            'Notes': 'Unowned Islanders 2nd-rounder. Big, physical Notre Dame scoring center.'
+        },
+        {
+            'Name': 'Beckett Hamilton', 'Year': 2026, 'Round': 3, 'Pick': 74, 'NHL_Team': 'Colorado Avalanche',
+            'Pos': 'F', 'Projected_Pts': 54.0, 'Projected_PPP': 14.0, 'GP': 67, 'Goals_Last_Yr': 24, 'Assists_Last_Yr': 38, 'Pts_Last_Yr': 62,
+            'League': 'WHL', 'Tier': 'Sleeper', 'Sniper_Score': 7.0, 'Sleeper_Score': 8.5, 'NHL_Drafted': True,
+            'Notes': 'Dragged Red Deer\'s offense singlehandedly. High-compete with massive ceiling. Colorado 3rd-rounder in 2026.'
+        },
+        {
+            'Name': 'Axel Elofsson', 'Year': 2026, 'Round': 4, 'Pick': 128, 'NHL_Team': 'Colorado Avalanche',
+            'Pos': 'D', 'Projected_Pts': 53.0, 'Projected_PPP': 19.5, 'GP': 48, 'Goals_Last_Yr': 14, 'Assists_Last_Yr': 28, 'Pts_Last_Yr': 42,
+            'League': 'Sweden Jr', 'Tier': 'Sleeper', 'Sniper_Score': 7.0, 'Sleeper_Score': 8.5, 'NHL_Drafted': True,
+            'Notes': 'Colorado 4th-rounder in 2026. Swedish puck-mover. Virtuoso skater with dynamic perimeter play. Built for running 1PP units.'
+        },
+        {
+            'Name': 'Kamil Bednarik', 'Year': 2024, 'Round': 2, 'Pick': 61, 'NHL_Team': 'Florida Panthers',
+            'Pos': 'F', 'Projected_Pts': 53.0, 'Projected_PPP': 15.0, 'GP': 36, 'Goals_Last_Yr': 12, 'Assists_Last_Yr': 18, 'Pts_Last_Yr': 30,
+            'League': 'NCAA', 'Tier': 'Sleeper', 'Sniper_Score': 6.5, 'Sleeper_Score': 8.0, 'NHL_Drafted': True,
+            'Notes': 'Unowned Florida 2nd-rounder. Smart USNTDP playmaking center with high-end offensive hockey sense heading to BU.'
+        },
+        {
+            'Name': 'Theo Lindstein', 'Year': 2023, 'Round': 1, 'Pick': 29, 'NHL_Team': 'St. Louis Blues',
+            'Pos': 'D', 'Projected_Pts': 52.0, 'Projected_PPP': 18.0, 'GP': 49, 'Goals_Last_Yr': 8, 'Assists_Last_Yr': 23, 'Pts_Last_Yr': 31,
+            'League': 'SHL', 'Tier': 'Sleeper', 'Sniper_Score': 6.0, 'Sleeper_Score': 9.0, 'NHL_Drafted': True,
+            'Notes': 'Unowned Swedish playmaker. St. Louis 1st-rounder who dominated the World Juniors with elite vision and PP QB play.'
+        },
+        {
+            'Name': 'Domán Kristóf Szongoth', 'Year': 2026, 'Round': 5, 'Pick': 156, 'NHL_Team': 'Buffalo Sabres',
+            'Pos': 'F', 'Projected_Pts': 52.0, 'Projected_PPP': 15.0, 'GP': 44, 'Goals_Last_Yr': 22, 'Assists_Last_Yr': 23, 'Pts_Last_Yr': 45,
+            'League': 'Finland Jr', 'Tier': 'Sleeper', 'Sniper_Score': 7.5, 'Sleeper_Score': 8.5, 'NHL_Drafted': True,
+            'Notes': 'Buffalo 5th-rounder in 2026. Dynamic Hungarian-born speedster. Dangerous shot release; joining Greyhounds in OHL.'
+        },
+        {
+            'Name': 'Keaton Verhoeff', 'Year': 2026, 'Round': 1, 'Pick': 9, 'NHL_Team': '2026 Draft Eligible',
+            'Pos': 'D', 'Projected_Pts': 52.0, 'Projected_PPP': 18.0, 'GP': 42, 'Goals_Last_Yr': 10, 'Assists_Last_Yr': 25, 'Pts_Last_Yr': 35,
+            'League': 'NCAA', 'Tier': 'PP Quarterback', 'Sniper_Score': 6.5, 'Sleeper_Score': 2.0, 'NHL_Drafted': True,
+            'Notes': 'Calm demeanor, takes up a ton of space at 6-foot-4. Committed to UND, raw but sky-high ceiling.'
+        },
+        {
+            'Name': 'Aron Kiviharju', 'Year': 2024, 'Round': 4, 'Pick': 122, 'NHL_Team': 'Minnesota Wild',
+            'Pos': 'D', 'Projected_Pts': 51.5, 'Projected_PPP': 21.0, 'GP': 48, 'Goals_Last_Yr': 6, 'Assists_Last_Yr': 38, 'Pts_Last_Yr': 44,
+            'League': 'Liiga', 'Tier': 'Sleeper', 'Sniper_Score': 5.0, 'Sleeper_Score': 9.5, 'NHL_Drafted': True,
+            'Notes': 'Unowned top-tier steal! Formerly ranked top-5 overall before a knee injury. Post-recovery 0.92 PPG breakout in Liiga/AHL.'
+        },
+        {
+            'Name': 'Simon Katolicky', 'Year': 2026, 'Round': 5, 'Pick': 132, 'NHL_Team': 'Calgary Flames',
+            'Pos': 'F', 'Projected_Pts': 51.0, 'Projected_PPP': 13.0, 'GP': 48, 'Goals_Last_Yr': 24, 'Assists_Last_Yr': 16, 'Pts_Last_Yr': 40,
+            'League': 'Finland Jr', 'Tier': 'Sleeper', 'Sniper_Score': 6.8, 'Sleeper_Score': 8.0, 'NHL_Drafted': True,
+            'Notes': 'Calgary 5th-rounder in 2026. 6-foot-6 Finnish giant power forward. Unbelievable net-front utility and screen presence.'
+        },
+        {
+            'Name': 'Jonas Woo', 'Year': 2026, 'Round': 6, 'Pick': 185, 'NHL_Team': 'Columbus Blue Jackets',
+            'Pos': 'D', 'Projected_Pts': 51.0, 'Projected_PPP': 16.5, 'GP': 56, 'Goals_Last_Yr': 29, 'Assists_Last_Yr': 57, 'Pts_Last_Yr': 86,
+            'League': 'WHL', 'Tier': 'Sleeper', 'Sniper_Score': 8.0, 'Sleeper_Score': 10.0, 'NHL_Drafted': True,
+            'Notes': 'WHL defenseman scoring leader with 86 points in 56 games (1.54 PPG!). Columbus 6th-rounder in 2026. Premier 1PP QB steal.'
+        },
+        {
+            'Name': 'Tomáš Galvas', 'Year': 2026, 'Round': 2, 'Pick': 54, 'NHL_Team': 'Pittsburgh Penguins',
+            'Pos': 'D', 'Projected_Pts': 50.0, 'Projected_PPP': 16.0, 'GP': 32, 'Goals_Last_Yr': 8, 'Assists_Last_Yr': 16, 'Pts_Last_Yr': 24,
+            'League': 'Czechia', 'Tier': 'Sleeper', 'Sniper_Score': 4.5, 'Sleeper_Score': 9.0, 'NHL_Drafted': True,
+            'Notes': 'Pittsburgh 2nd-rounder in 2026. Elite transition skater. Calm, composed puck carrier who dominated WJC play.'
+        },
+        {
+            'Name': 'Dmitriy Simashev', 'Year': 2023, 'Round': 1, 'Pick': 6, 'NHL_Team': 'Utah Hockey Club',
+            'Pos': 'D', 'Projected_Pts': 49.0, 'Projected_PPP': 15.0, 'GP': 63, 'Goals_Last_Yr': 5, 'Assists_Last_Yr': 13, 'Pts_Last_Yr': 18,
+            'League': 'KHL', 'Tier': 'Sleeper', 'Sniper_Score': 4.5, 'Sleeper_Score': 8.5, 'NHL_Drafted': True,
+            'Notes': 'Unowned 6th overall pick from 2023. Massive 6-foot-4 skating wizard developing highly potent offensive transition game.'
+        },
+        {
+            'Name': 'Alberts Šmits', 'Year': 2026, 'Round': 1, 'Pick': 5, 'NHL_Team': 'New York Rangers',
+            'Pos': 'D', 'Projected_Pts': 48.0, 'Projected_PPP': 15.0, 'GP': 40, 'Goals_Last_Yr': 8, 'Assists_Last_Yr': 20, 'Pts_Last_Yr': 28,
+            'League': 'DEL', 'Tier': 'PP Quarterback', 'Sniper_Score': 6.0, 'Sleeper_Score': 2.0, 'NHL_Drafted': True,
+            'Notes': '6-foot-3 physical, engaged defender. Played against men in Finland and Germany, and represented Latvia at Olympics.'
+        },
+        {
+            'Name': 'Timofei Runtso', 'Year': 2026, 'Round': 2, 'Pick': 57, 'NHL_Team': 'Montreal Canadiens',
+            'Pos': 'D', 'Projected_Pts': 48.0, 'Projected_PPP': 14.5, 'GP': 68, 'Goals_Last_Yr': 11, 'Assists_Last_Yr': 33, 'Pts_Last_Yr': 44,
+            'League': 'WHL', 'Tier': 'Sleeper', 'Sniper_Score': 5.8, 'Sleeper_Score': 8.5, 'NHL_Drafted': True,
+            'Notes': 'Montreal 2nd-rounder in 2026. Rugged, heavy-hitting WHL blueliner who exploded for 44 points. Committing to Miami University.'
+        },
+        {
+            'Name': 'Leo Sahlin Wallenius', 'Year': 2024, 'Round': 2, 'Pick': 53, 'NHL_Team': '2026 Draft Eligible',
+            'Pos': 'D', 'Projected_Pts': 48.0, 'Projected_PPP': 16.0, 'GP': 43, 'Goals_Last_Yr': 6, 'Assists_Last_Yr': 22, 'Pts_Last_Yr': 28,
+            'League': 'Sweden Jr', 'Tier': 'Sleeper', 'Sniper_Score': 5.5, 'Sleeper_Score': 8.0, 'NHL_Drafted': True,
+            'Notes': 'Unowned Sharks 2nd-rounder. Sleek, beautiful skater with high-end offensive transition potential.'
+        },
+        {
+            'Name': 'Caden Price', 'Year': 2023, 'Round': 3, 'Pick': 84, 'NHL_Team': 'Seattle Kraken',
+            'Pos': 'D', 'Projected_Pts': 47.0, 'Projected_PPP': 15.0, 'GP': 62, 'Goals_Last_Yr': 10, 'Assists_Last_Yr': 45, 'Pts_Last_Yr': 55,
+            'League': 'WHL', 'Tier': 'Sleeper', 'Sniper_Score': 6.0, 'Sleeper_Score': 8.0, 'NHL_Drafted': True,
+            'Notes': 'Unowned Seattle 3rd-rounder. Smooth-skating, highly mobile defenseman who exploded for 55 points in the WHL.'
+        },
+        {
+            'Name': 'Lukas Sawchyn', 'Year': 2026, 'Round': 3, 'Pick': 80, 'NHL_Team': 'Arizona Coyotes',
+            'Pos': 'F', 'Projected_Pts': 64.0, 'Projected_PPP': 20.0, 'GP': 68, 'Goals_Last_Yr': 27, 'Assists_Last_Yr': 61, 'Pts_Last_Yr': 88,
+            'League': 'WHL', 'Tier': 'Sleeper', 'Sniper_Score': 6.8, 'Sleeper_Score': 9.0, 'NHL_Drafted': False,
+            'Notes': 'Unowned overager. Pure power-play maestro with 88 WHL points (1.29 PPG). ASU commit.'
+        },
+        {
+            'Name': 'Félix Lacerte', 'Year': 2026, 'Round': 4, 'Pick': 105, 'NHL_Team': 'Colorado Avalanche',
+            'Pos': 'F', 'Projected_Pts': 63.0, 'Projected_PPP': 21.0, 'GP': 62, 'Goals_Last_Yr': 38, 'Assists_Last_Yr': 48, 'Pts_Last_Yr': 86,
+            'League': 'QMJHL', 'Tier': 'Sleeper', 'Sniper_Score': 8.2, 'Sleeper_Score': 8.5, 'NHL_Drafted': False,
+            'Notes': 'Unowned overager. Slick playmaker with 86 points in 62 games (1.39 PPG) and an elite shot release. Vermont commit.'
+        },
+        {
+            'Name': 'Philippe Veilleux', 'Year': 2026, 'Round': 6, 'Pick': 195, 'NHL_Team': 'Detroit Red Wings',
+            'Pos': 'F', 'Projected_Pts': 62.0, 'Projected_PPP': 18.0, 'GP': 68, 'Goals_Last_Yr': 43, 'Assists_Last_Yr': 53, 'Pts_Last_Yr': 96,
+            'League': 'QMJHL', 'Tier': 'Sleeper', 'Sniper_Score': 8.0, 'Sleeper_Score': 8.8, 'NHL_Drafted': False,
+            'Notes': 'Unowned overager. Incredibly productive junior star with 43 goals and 96 points (1.41 PPG). Northeastern commit.'
+        },
+        {
+            'Name': 'James Hagens', 'Year': 2025, 'Round': 1, 'Pick': 7, 'NHL_Team': 'Boston Bruins',
+            'Pos': 'F', 'Projected_Pts': 81.0, 'Projected_PPP': 28.0, 'GP': 37, 'Goals_Last_Yr': 18, 'Assists_Last_Yr': 29, 'Pts_Last_Yr': 47,
+            'League': 'NCAA', 'Tier': 'Elite', 'Sniper_Score': 7.5, 'Sleeper_Score': 1.0, 'NHL_Drafted': True,
+            'Notes': 'Dynamic center with world-class playmaking and elite power-play vision.'
+        },
+        {
+            'Name': 'Porter Martone', 'Year': 2025, 'Round': 1, 'Pick': 6, 'NHL_Team': 'Philadelphia Flyers',
+            'Pos': 'F', 'Projected_Pts': 76.5, 'Projected_PPP': 23.0, 'GP': 57, 'Goals_Last_Yr': 33, 'Assists_Last_Yr': 38, 'Pts_Last_Yr': 71,
+            'League': 'OHL', 'Tier': 'Elite', 'Sniper_Score': 8.8, 'Sleeper_Score': 1.0, 'NHL_Drafted': True,
+            'Notes': 'Power forward who dominates net-front and eats up power play goals.'
+        },
+        {
+            'Name': 'Michael Misa', 'Year': 2025, 'Round': 1, 'Pick': 2, 'NHL_Team': '2026 Draft Eligible',
+            'Pos': 'F', 'Projected_Pts': 72.0, 'Projected_PPP': 21.0, 'GP': 67, 'Goals_Last_Yr': 28, 'Assists_Last_Yr': 47, 'Pts_Last_Yr': 75,
+            'League': 'OHL', 'Tier': 'Elite', 'Sniper_Score': 8.2, 'Sleeper_Score': 2.5, 'NHL_Drafted': True,
+            'Notes': 'Exceptional status player with elite speed, processing, and finishing.'
+        },
+        {
+            'Name': 'Macklin Celebrini', 'Year': 2024, 'Round': 1, 'Pick': 1, 'NHL_Team': '2026 Draft Eligible',
+            'Pos': 'F', 'Projected_Pts': 84.0, 'Projected_PPP': 30.0, 'GP': 70, 'Goals_Last_Yr': 32, 'Assists_Last_Yr': 32, 'Pts_Last_Yr': 64,
+            'League': 'NHL', 'Tier': 'Elite', 'Sniper_Score': 8.9, 'Sleeper_Score': 1.0, 'NHL_Drafted': True,
+            'Notes': 'Franchise 1C. Shoots with high-end volume and dominates all point situations.'
+        },
+        {
+            'Name': 'Artyom Levshunov', 'Year': 2024, 'Round': 1, 'Pick': 2, 'NHL_Team': 'Chicago Blackhawks',
+            'Pos': 'D', 'Projected_Pts': 48.0, 'Projected_PPP': 16.5, 'GP': 55, 'Goals_Last_Yr': 9, 'Assists_Last_Yr': 26, 'Pts_Last_Yr': 35,
+            'League': 'AHL', 'Tier': 'PP Quarterback', 'Sniper_Score': 7.0, 'Sleeper_Score': 2.0, 'NHL_Drafted': True,
+            'Notes': 'Highly athletic defenseman. Projects to quarterback Chicago\'s 1PP unit.'
+        },
+        {
+            'Name': 'Ivan Demidov', 'Year': 2024, 'Round': 1, 'Pick': 5, 'NHL_Team': 'Montreal Canadiens',
+            'Pos': 'F', 'Projected_Pts': 78.0, 'Projected_PPP': 26.0, 'GP': 45, 'Goals_Last_Yr': 23, 'Assists_Last_Yr': 37, 'Pts_Last_Yr': 60,
+            'League': 'MHL', 'Tier': 'Elite', 'Sniper_Score': 8.1, 'Sleeper_Score': 1.2, 'NHL_Drafted': True,
+            'Notes': 'Incredibly creative winger with elite perimeter play and PP control.'
+        },
+        {
+            'Name': 'Connor Bedard', 'Year': 2023, 'Round': 1, 'Pick': 1, 'NHL_Team': 'Chicago Blackhawks',
+            'Pos': 'F', 'Projected_Pts': 92.0, 'Projected_PPP': 34.0, 'GP': 68, 'Goals_Last_Yr': 22, 'Assists_Last_Yr': 39, 'Pts_Last_Yr': 61,
+            'League': 'NHL', 'Tier': 'Elite', 'Sniper_Score': 9.8, 'Sleeper_Score': 1.0, 'NHL_Drafted': True,
+            'Notes': 'Generational sniper. Top-tier power play release from the left circle.'
+        },
+        {
+            'Name': 'Leo Carlsson', 'Year': 2023, 'Round': 1, 'Pick': 2, 'NHL_Team': 'Anaheim Ducks',
+            'Pos': 'F', 'Projected_Pts': 70.0, 'Projected_PPP': 22.0, 'GP': 55, 'Goals_Last_Yr': 12, 'Assists_Last_Yr': 17, 'Pts_Last_Yr': 29,
+            'League': 'NHL', 'Tier': 'Elite', 'Sniper_Score': 7.8, 'Sleeper_Score': 1.5, 'NHL_Drafted': True,
+            'Notes': 'Highly intelligent playmaker with excellent puck retention skills.'
+        },
+        {
+            'Name': 'Adam Fantilli', 'Year': 2023, 'Round': 1, 'Pick': 3, 'NHL_Team': 'Columbus Blue Jackets',
+            'Pos': 'F', 'Projected_Pts': 71.5, 'Projected_PPP': 21.0, 'GP': 49, 'Goals_Last_Yr': 20, 'Assists_Last_Yr': 20, 'Pts_Last_Yr': 40,
+            'League': 'NHL', 'Tier': 'Elite', 'Sniper_Score': 8.4, 'Sleeper_Score': 1.5, 'NHL_Drafted': True,
+            'Notes': 'Power forward package with an elite wrister. Projects to dominate top PP line.'
+        }
+    ]
+    
+    # Calculate PPG dynamically
+    for row in data:
+        gp = row.get('GP', 0)
+        pts = row.get('Pts_Last_Yr', 0)
+        row['PPG'] = round(pts / gp, 2) if gp > 0 else 0.0
+        
+    return pd.DataFrame(data)
 
 
 # --- 3. LIVE NHL API FETCH FOR MULTIPLE YEARS ---
@@ -978,8 +433,11 @@ def fetch_nhl_draft_data_for_years(years):
                             "Pos": pos,
                             "Projected_Pts": proj_pts,
                             "Projected_PPP": proj_ppp,
+                            "GP": 0,
                             "Goals_Last_Yr": 0,
+                            "Assists_Last_Yr": 0,
                             "Pts_Last_Yr": 0,
+                            "PPG": 0.0,
                             "League": "Draft API",
                             "Tier": "Prospect",
                             "Sniper_Score": 5.0,
@@ -994,6 +452,7 @@ def fetch_nhl_draft_data_for_years(years):
         return pd.DataFrame(combined_picks)
     else:
         return df_preseeded
+
 # --- 4. PARSE FANTAX ROSTERS TO DISCOVER OWNED PLAYERS ---
 def find_player_column(df):
     possible_cols = ['Player', 'Player Name', 'Name', 'player_name', 'player', 'PLAYER', 'PLAYER NAME', 'PlayerName', 'player name']
@@ -1032,7 +491,6 @@ def get_owned_players_database(file_tokens=(), _uploaded_files=None):
             continue
         processed_filenames.add(filename)
         
-        # Extract Team ID or label
         match = re.search(r"\((\d+)\)", filename)
         if match:
             team_name = f"Team {match.group(1)}"
@@ -1162,8 +620,11 @@ if owned_db:
         if norm_n in owned_db:
             matched_key = norm_n
         else:
-            matches = difflib.get_close_matches(norm_n, owned_keys, n=1, cutoff=0.90)
-            if matches:
+            # Strict last-name check for safety
+            last_name_parts = norm_n.split()
+            last_name = last_name_parts[-1] if last_name_parts else norm_n
+            matches = difflib.get_close_matches(norm_n, owned_keys, n=1, cutoff=0.92)
+            if matches and last_name in matches[0]:
                 matched_key = matches[0]
                 
         if matched_key:
@@ -1172,10 +633,11 @@ if owned_db:
 
 # Sidebar Sorting
 st.sidebar.markdown("---")
-st.sidebar.subheader("⚡ Draft Board Sorting")
+st.sidebar.subheader("⚡ Draft Board Sorting & Performance Filters")
 sort_option = st.sidebar.selectbox(
     "Sort Board By:",
     [
+        "Last Season Points Per Game (PPG)",
         "Pure Offensive Points (Proj. Pts)",
         "Powerplay Utility (Proj. PPP)",
         "Sniper Score / Goals",
@@ -1184,6 +646,9 @@ sort_option = st.sidebar.selectbox(
     ],
     index=0
 )
+
+# Minimum PPG Filter
+min_ppg = st.sidebar.slider("Minimum Last Season PPG Filter:", min_value=0.0, max_value=1.5, value=0.0, step=0.1)
 
 # Sidebar Filters
 filter_pos = st.sidebar.multiselect("Positions", ["F", "D"], default=["F", "D"])
@@ -1205,9 +670,11 @@ with col_sb2:
         st.rerun()
 
 # Apply Filters
-df_filtered = df_base[df_base['Year'].isin(selected_years)]
+df_filtered = df_base[df_base['Year'].isin(selected_years)].copy()
 df_filtered = df_filtered[df_filtered['Pos'].isin(filter_pos)]
 df_filtered = df_filtered[df_filtered['Tier'].isin(filter_tier)]
+if min_ppg > 0.0:
+    df_filtered = df_filtered[df_filtered['PPG'] >= min_ppg]
 if search_query:
     df_filtered = df_filtered[df_filtered['Name'].str.contains(search_query, case=False)]
 
@@ -1225,6 +692,20 @@ tab_draft, tab_favs, tab_teams, tab_api = st.tabs([
     "🔌 API Connection Hub"
 ])
 
+# Helper function to get badge html
+def get_performance_badge_html(row):
+    ppg = row.get('PPG', 0.0)
+    tier = row.get('Tier', '')
+    round_num = row.get('Round', 1)
+    
+    if ppg >= 1.2 and round_num >= 3:
+        return "<span style='background-color:#FEF3C7; color:#B45309; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:700;'>🔥 Breakout Sleeper</span>"
+    elif ppg >= 1.0:
+        return "<span style='background-color:#D1FAE5; color:#047857; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:700;'>💎 Top Producer</span>"
+    elif tier == "PP Quarterback":
+        return "<span style='background-color:#E0F2FE; color:#0369A1; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:700;'>🏒 1PP QB</span>"
+    return ""
+
 # ==================== TAB 1: LIVE DRAFT CENTER ====================
 with tab_draft:
     col_left, col_right = st.columns([2, 1])
@@ -1235,7 +716,9 @@ with tab_draft:
         # Split available vs drafted players
         available_players = df_filtered[~df_filtered['Name'].isin(st.session_state.drafted_players)].copy()
 
-        if sort_option == "Pure Offensive Points (Proj. Pts)":
+        if sort_option == "Last Season Points Per Game (PPG)":
+            available_players = available_players.sort_values(by=["PPG", "Projected_Pts"], ascending=[False, False])
+        elif sort_option == "Pure Offensive Points (Proj. Pts)":
             available_players = available_players.sort_values(by=["Projected_Pts", "Projected_PPP"], ascending=[False, False])
         elif sort_option == "Powerplay Utility (Proj. PPP)":
             available_players = available_players.sort_values(by=["Projected_PPP", "Projected_Pts"], ascending=[False, False])
@@ -1255,13 +738,13 @@ with tab_draft:
             for index, row in available_players.iterrows():
                 is_owned = pd.notna(row['Owned_By'])
                 is_fav = row['Name'] in st.session_state.favorite_players
+                badge_html = get_performance_badge_html(row)
                 
                 with st.container():
                     cols = st.columns([1, 1, 3, 2, 2, 2, 2])
                     
                     # Draft Button
                     with cols[0]:
-                        button_label = "Owned" if is_owned else "Draft"
                         is_disabled = is_owned or (not row.get('NHL_Drafted', True))
                         button_label = "Owned" if is_owned else ("Ineligible" if not row.get('NHL_Drafted', True) else "Draft")
                         if st.button(button_label, key=f"draft_{row['Name']}_{row['Year']}", disabled=is_disabled):
@@ -1288,21 +771,30 @@ with tab_draft:
                     # Player Info
                     with cols[2]:
                         star_prefix = "⭐ " if is_fav else ""
+                        badge_str = f" {badge_html}" if badge_html else ""
                         if is_owned:
-                            st.markdown(f"{star_prefix}**{row['Name']}** ({row['Pos']}) <span style='background-color:#FEE2E2; color:#DC2626; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600; margin-left:8px;'>❌ Owned by {row['Owned_By']} ({row['Owned_Status']})</span>", unsafe_allow_html=True)
+                            st.markdown(f"{star_prefix}**{row['Name']}** ({row['Pos']}){badge_str} <span style='background-color:#FEE2E2; color:#DC2626; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600; margin-left:8px;'>❌ Owned by {row['Owned_By']} ({row['Owned_Status']})</span>", unsafe_allow_html=True)
                         elif not row.get('NHL_Drafted', True):
-                            st.markdown(f"{star_prefix}**{row['Name']}** ({row['Pos']}) <span style='background-color:#FEF3C7; color:#D97706; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600; margin-left:8px;'>⚠️ Ineligible (Undrafted)</span>", unsafe_allow_html=True)
+                            st.markdown(f"{star_prefix}**{row['Name']}** ({row['Pos']}){badge_str} <span style='background-color:#FEF3C7; color:#D97706; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600; margin-left:8px;'>⚠️ Ineligible (Undrafted)</span>", unsafe_allow_html=True)
                         else:
-                            st.markdown(f"{star_prefix}**{row['Name']}** ({row['Pos']})")
+                            st.markdown(f"{star_prefix}**{row['Name']}** ({row['Pos']}){badge_str}", unsafe_allow_html=True)
+                        
                         if row.get('NHL_Drafted', True):
-                            st.caption(f"{row['Year']} Draft · Pick #{row['Pick']} by {row['NHL_Team']} · {row['League']}")
+                            if 'Draft Eligible' in str(row.get('NHL_Team', '')) or 'Draft Eligible' in str(row.get('Notes', '')):
+                                st.caption(f"{row['Year']} Draft Eligible · Projected #{row['Pick']} Overall · {row['League']}")
+                            else:
+                                st.caption(f"{row['Year']} Draft · Pick #{row['Pick']} by {row['NHL_Team']} · {row['League']}")
                         else:
                             st.caption(f"Undrafted · NCAA Commitment · {row['League']}")
 
-                    # Projected Points
+                    # Stat Line & PPG
                     with cols[3]:
-                        st.metric("Proj. Pts", f"{row['Projected_Pts']} pts")
-                        
+                        if row.get('GP', 0) > 0:
+                            st.metric("Last Yr PPG", f"{row.get('PPG', 0.0):.2f}")
+                            st.caption(f"{row.get('Goals_Last_Yr',0)}G · {row.get('Assists_Last_Yr',0)}A in {row.get('GP',0)} GP")
+                        else:
+                            st.metric("Proj. Pts", f"{row['Projected_Pts']} pts")
+
                     # Projected PPP
                     with cols[4]:
                         st.metric("Proj. PPP", f"{row['Projected_PPP']} pts")
@@ -1374,12 +866,14 @@ with tab_favs:
         # Sorting for Watchlist
         fav_sort = st.selectbox(
             "Sort Watchlist By:",
-            ["Projected Points", "Projected PPP", "Real Draft Pick #", "Position"],
+            ["Points Per Game (PPG)", "Projected Points", "Projected PPP", "Real Draft Pick #", "Position"],
             index=0,
             key="fav_sort_selectbox"
         )
         
-        if fav_sort == "Projected Points":
+        if fav_sort == "Points Per Game (PPG)":
+            df_favs = df_favs.sort_values(by=["PPG", "Projected_Pts"], ascending=[False, False])
+        elif fav_sort == "Projected Points":
             df_favs = df_favs.sort_values(by="Projected_Pts", ascending=False)
         elif fav_sort == "Projected PPP":
             df_favs = df_favs.sort_values(by="Projected_PPP", ascending=False)
@@ -1392,6 +886,8 @@ with tab_favs:
         for index, row in df_favs.iterrows():
             is_drafted = row['Name'] in st.session_state.drafted_players
             is_owned = pd.notna(row['Owned_By'])
+            badge_html = get_performance_badge_html(row)
+            badge_str = f" {badge_html}" if badge_html else ""
             
             with st.container():
                 f_cols = st.columns([1, 1, 3, 2, 2, 2, 2])
@@ -1423,13 +919,13 @@ with tab_favs:
                 # Player Info
                 with f_cols[2]:
                     if is_drafted:
-                        st.markdown(f"~~⭐ **{row['Name']}** ({row['Pos']})~~ <span style='background-color:#E5E7EB; color:#4B5563; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600;'>Taken</span>", unsafe_allow_html=True)
+                        st.markdown(f"~~⭐ **{row['Name']}** ({row['Pos']}){badge_str}~~ <span style='background-color:#E5E7EB; color:#4B5563; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600;'>Taken</span>", unsafe_allow_html=True)
                     elif is_owned:
-                        st.markdown(f"⭐ **{row['Name']}** ({row['Pos']}) <span style='background-color:#FEE2E2; color:#DC2626; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600; margin-left:8px;'>❌ Owned by {row['Owned_By']} ({row['Owned_Status']})</span>", unsafe_allow_html=True)
+                        st.markdown(f"⭐ **{row['Name']}** ({row['Pos']}){badge_str} <span style='background-color:#FEE2E2; color:#DC2626; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600; margin-left:8px;'>❌ Owned by {row['Owned_By']} ({row['Owned_Status']})</span>", unsafe_allow_html=True)
                     elif not row.get('NHL_Drafted', True):
-                        st.markdown(f"⭐ **{row['Name']}** ({row['Pos']}) <span style='background-color:#FEF3C7; color:#D97706; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600; margin-left:8px;'>⚠️ Ineligible (Undrafted)</span>", unsafe_allow_html=True)
+                        st.markdown(f"⭐ **{row['Name']}** ({row['Pos']}){badge_str} <span style='background-color:#FEF3C7; color:#D97706; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600; margin-left:8px;'>⚠️ Ineligible (Undrafted)</span>", unsafe_allow_html=True)
                     else:
-                        st.markdown(f"⭐ **{row['Name']}** ({row['Pos']})")
+                        st.markdown(f"⭐ **{row['Name']}** ({row['Pos']}){badge_str}", unsafe_allow_html=True)
                         
                     if row.get('NHL_Drafted', True):
                         if 'Draft Eligible' in str(row.get('NHL_Team', '')) or 'Draft Eligible' in str(row.get('Notes', '')):
@@ -1441,7 +937,11 @@ with tab_favs:
 
                 # Metrics & Info
                 with f_cols[3]:
-                    st.metric("Proj. Pts", f"{row['Projected_Pts']} pts")
+                    if row.get('GP', 0) > 0:
+                        st.metric("Last Yr PPG", f"{row.get('PPG', 0.0):.2f}")
+                        st.caption(f"{row.get('Goals_Last_Yr',0)}G · {row.get('Assists_Last_Yr',0)}A in {row.get('GP',0)} GP")
+                    else:
+                        st.metric("Proj. Pts", f"{row['Projected_Pts']} pts")
                 with f_cols[4]:
                     st.metric("Proj. PPP", f"{row['Projected_PPP']} pts")
                 with f_cols[5]:
@@ -1471,7 +971,7 @@ with tab_teams:
         st.info("No matching drafted prospects registered for this team.")
     else:
         st.write(f"### {selected_team}'s Fantasy Prospect Portfolio")
-        st.dataframe(team_stash[["Name", "Year", "Round", "Pick", "Pos", "Projected_Pts", "Projected_PPP", "Goals_Last_Yr", "Notes"]])
+        st.dataframe(team_stash[["Name", "Year", "Round", "Pick", "Pos", "Projected_Pts", "Projected_PPP", "PPG", "Goals_Last_Yr", "Notes"]])
         
         # Quick team metrics
         st.write("#### Team Metric Comparison")
